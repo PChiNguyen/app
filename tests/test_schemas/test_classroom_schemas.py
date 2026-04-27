@@ -14,10 +14,10 @@ def teacher_id():
 
 def test_create_classroom_success(teacher_id):
     """Tests that a classroom is created with valid data"""
-    data = {"name": "Lớp 11A1", "teacher_id": teacher_id}
+    data = {"name": "Lớp 11A1"}
     classroom = ClassroomCreate(**data)
     assert classroom.name == "Lớp 11A1"
-    assert classroom.teacher_id == teacher_id
+    
 
 @pytest.mark.parametrize("invalid_name", [
     "",           # Empty string

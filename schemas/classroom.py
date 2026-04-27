@@ -17,5 +17,5 @@ class ClassroomRead(ClassroomBase):
     model_config= ConfigDict(from_attributes=True)   
 
 class StudentRankingRead(BaseModel):
-    name: str
+    name: str 
     gpa: float 
