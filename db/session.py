@@ -13,8 +13,7 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 
 
 
-engine= create_engine(settings.SQLALCHEMY_DATABASE_URL,echo= False, 
-                      connect_args={"check_same_thread": False}) #dev only 
+engine= create_engine(settings.SQLALCHEMY_DATABASE_URL,echo= False) #dev only 
 
 Sessionlocal= sessionmaker(bind= engine,autoflush=False,autocommit= False)
 
