@@ -1,7 +1,20 @@
 from uuid import UUID 
+from sqlalchemy import Integer, String, cast, func
+from db.models.student import Student
+from db.models.grade import Grade
 from sqlalchemy.orm import Session  
 from db.models.student import Student 
 from typing import List, Optional  
+
+from dataclasses import dataclass
+from uuid import UUID
+
+# This tells VS Code exactly what the data looks like!
+class ReportCardDTO:
+    student_id: UUID
+    student_name: str
+    gpa: float
+    rank: int
 
 class StudentRepository: 
     def __init__(self,db: Session):
@@ -48,6 +61,48 @@ class StudentRepository:
     # This is called 'Pagination' and it's crucial so your API doesn't crash 
     # if a school has 10,000 classrooms.
         return self.db.query(Student).offset(skip).limit(limit).all()   
+    
+
+
+
+    def get_student_rank_and_gpa(self, student_id: UUID) -> Optional[ReportCardDTO]:
+        student = self.get_by_id(student_id)
+        if not student or not student.classroom_id:
+            return None    
+            
+        classroom_id = student.classroom_id 
+
+        # 1. Create the casted variable
+        
+
+        # 2. Use numeric_coeff EVERYWHERE instead of Grade.coefficient
+        gpa_calc = func.sum(Grade.score * Grade.coefficient) / func.sum(Grade.coefficient)
+
+        rank_calc = func.rank().over(order_by=gpa_calc.desc())
+
+        classroom_stats = (  
+            self.db.query(
+                Student.id.label('student_id'),
+                Student.name.label('student_name'),
+                gpa_calc.label('gpa'),
+                rank_calc.label('rank')
+            )
+            .join(Grade, Grade.student_id == Student.id)
+            .filter(Student.classroom_id == classroom_id)
+            .group_by(Student.id)
+            .subquery()
+        )
+        
+        final_result = (
+            self.db.query(classroom_stats)
+            .filter(classroom_stats.c.student_id == student_id) 
+            .first()
+        )
+
+        return final_result
+# this final result is a row object, which is like our own version of a student object(with extra gpa and rank attributes) 
+
+
     
 
 

@@ -1,8 +1,17 @@
+from dataclasses import dataclass
 from uuid import UUID 
+from sqlalchemy import func 
 from db.models.classroom import Classroom
 from sqlalchemy.orm import Session
-from typing import List, Optional   
-
+from typing import List, NamedTuple, Optional   
+from db.models.grade import Grade
+from db.models.student import Student
+from db.models.student import Student
+class LeaderboardRow(NamedTuple):
+    student_id: UUID
+    student_name: str
+    gpa: float
+    class_rank: int
 class ClassroomRepository:
     def __init__(self,db:Session):
         self.db=db
@@ -16,7 +25,7 @@ class ClassroomRepository:
     def delete(self,classroom_id:UUID)->bool:
         classroom=self.db.query(Classroom).filter(Classroom.id==classroom_id).first()
         if classroom:
-            self.db.delete(classroom)
+            self.db.delete(classroom)  
             self.db.commit()    
             return True 
         return False
@@ -49,6 +58,32 @@ class ClassroomRepository:
         # This is called 'Pagination' and it's crucial so your API doesn't crash 
         # if a school has 10,000 classrooms.
         return self.db.query(Classroom).offset(skip).limit(limit).all()  
+
+    def get_class_ranking(self, classroom_id: UUID) -> List[LeaderboardRow]:
+        classroom= self.get_by_id(classroom_id) 
+        if not classroom:
+            return None 
+        
+        gpa_calc = func.sum(Grade.score * Grade.coefficient) / func.sum(Grade.coefficient)
+        rank_calc= func.rank().over(order_by=gpa_calc.desc()) 
+
+        
+        leaderboard= (
+            self.db.query(
+            Student.id.label("student_id"),
+            Student.name.label("student_name"),
+            gpa_calc.label("gpa"),
+            rank_calc.label("class_rank")
+        )
+        .join(Grade, Grade.student_id == Student.id)
+        .filter(Student.classroom_id == classroom_id)
+        .group_by(Student.id)
+        .order_by(gpa_calc.desc())
+        .all())
+        return leaderboard 
+
+        
+    
 
 
     

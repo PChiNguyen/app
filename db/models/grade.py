@@ -1,12 +1,21 @@
 import uuid
 import re
-import enum
-from sqlalchemy import String, Float, ForeignKey, CheckConstraint, Enum as SQLEnum, UUID          
+from enum import IntEnum, Enum 
+from sqlalchemy import Integer, String, Float, ForeignKey, CheckConstraint, UUID, Enum as SQLEnum           
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 from db.base import Base
 
-class SubjectCoefficient(int, enum.Enum):
+
+class SubjectName(str, Enum):
+    MATH = "Math"
+    PHYSICS = "Physics"
+    CHEMISTRY = "Chemistry"
+    LITERATURE = "Literature"
+    ENGLISH = "English"
+
+
+class SubjectCoefficient(IntEnum):
     TESTS = 1
     MIDTERM = 2
     FINAL = 3
@@ -22,11 +31,14 @@ class Grade(Base):
         nullable=False
     )
                                                 
-    subject: Mapped[str] = mapped_column(String, nullable=False)
+    subject: Mapped[SubjectName] = mapped_column(
+        SQLEnum(SubjectName),
+        nullable=False
+    )
     score: Mapped[float] = mapped_column(Float, nullable=False)
     
     coefficient: Mapped[SubjectCoefficient] = mapped_column(
-        SQLEnum(SubjectCoefficient),
+        Integer,
         nullable=False,
         default=SubjectCoefficient.TESTS
     )
