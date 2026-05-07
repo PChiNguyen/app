@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 # Correct paths based on your file names
 from db.session import get_db
 from core.config import settings
-from db.models.user import User
+from db.models.user import User, UserRole
 from repositories.user_repo import UserRepository
 from schemas.auth import TokenPayload
 
@@ -47,5 +47,20 @@ def get_current_user(
             detail="User not found"
         )
     return user
+
+def get_current_teacher(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.role not in [UserRole.TEACHER, UserRole.ADMIN]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have enough cuteness to perform this action"
+        )
+    return current_user
+def get_current_student(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.role not in [UserRole.STUDENT, UserRole.ADMIN]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to perform this action"
+        )
+    return current_user
 
 

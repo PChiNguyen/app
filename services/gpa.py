@@ -1,7 +1,7 @@
 from typing import List, Dict 
 
 
-def calc_gpa(grades:    List[Dict[str, float]]) -> float:
+def calc_gpa(grades: List[Dict[str, float]]) -> float:
     if not grades:
         return 0.0
     total_score = sum(grade['score'] * grade['coefficient'] for grade in grades)

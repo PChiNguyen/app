@@ -1,11 +1,11 @@
 from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
 from uuid import UUID
-from db.models.grade import SubjectCoefficient # Import the VIP list!
+from db.models.grade import SubjectCoefficient, SubjectName  # Import the VIP list!
 
 # 1. The Core Attributes (Shared by almost everything)
 class GradeBase(BaseModel):
-    subject: str = Field(..., min_length=2, max_length=50)
+    subject: SubjectName = Field(..., description="Tên môn học, phải là một trong các giá trị: Math, Physics, Chemistry, Literature, English")
     score: float = Field(..., ge=0.0, le=10.0) 
     coefficient: SubjectCoefficient = Field(default=SubjectCoefficient.TESTS)
 
@@ -24,6 +24,6 @@ class GradeRead(GradeBase):
 # 4. What we expect for Edits (PUT/PATCH request)
 # Everything is Optional because they might only want to update the score
 class GradeUpdate(BaseModel):
-    subject: Optional[str] = Field(default=None, min_length=2, max_length=50)
+    subject: Optional[SubjectName] = Field(default=None, description="Tên môn học, phải là một trong các giá trị: Math, Physics, Chemistry, Literature, English")
     score: Optional[float] = Field(default=None, ge=0.0, le=10.0)
     coefficient: Optional[SubjectCoefficient] = Field(default=None)
