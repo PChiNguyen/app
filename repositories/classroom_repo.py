@@ -1,13 +1,16 @@
-from dataclasses import dataclass
+
 from uuid import UUID 
 from sqlalchemy import func 
+from db.models.assessment_template import AssessmentTemplate
 from db.models.classroom import Classroom
 from sqlalchemy.orm import Session
 from typing import List, NamedTuple, Optional   
-from db.models.grade import Grade
 from db.models.student import Student
 from db.models.student import Student
-class LeaderboardRow(NamedTuple):
+from db.models.student_score import Status, StudentScore
+from dataclasses import dataclass
+
+class LeaderboardRow(NamedTuple): 
     student_id: UUID
     student_name: str
     gpa: float
@@ -58,29 +61,45 @@ class ClassroomRepository:
         # This is called 'Pagination' and it's crucial so your API doesn't crash 
         # if a school has 10,000 classrooms.
         return self.db.query(Classroom).offset(skip).limit(limit).all()  
+    
 
-    def get_class_ranking(self, classroom_id: UUID) -> List[LeaderboardRow]:
-        classroom= self.get_by_id(classroom_id) 
-        if not classroom:
-            return None 
-        
-        gpa_calc = func.sum(Grade.score * Grade.coefficient) / func.sum(Grade.coefficient)
-        rank_calc= func.rank().over(order_by=gpa_calc.desc()) 
+    def get_classroom_leaderboard(self, classroom_id: UUID, semester: int) -> List[LeaderboardRow]:
+        # This is a more complex query that joins the students and their scores to calculate GPA and rank.
+        # It uses SQLAlchemy's func.rank() to calculate the rank based on GPA.
+        gpa_calc = func.round(
+            func.sum(StudentScore.score * AssessmentTemplate.coefficient) / func.sum(AssessmentTemplate.coefficient), 2)
+         
 
-        
-        leaderboard= (
-            self.db.query(
+        rank_calc = func.rank().over(order_by=gpa_calc.desc())
+
+        leaderboard= (self.db.query(
             Student.id.label("student_id"),
             Student.name.label("student_name"),
             gpa_calc.label("gpa"),
-            rank_calc.label("class_rank")
+            rank_calc.label("class_rank"),
+        ).join(
+            StudentScore, Student.id == StudentScore.student_id
+        ).join(
+            AssessmentTemplate, StudentScore.assessment_template_id == AssessmentTemplate.id
+        ).filter(
+            Student.classroom_id == classroom_id,
+            AssessmentTemplate.semester == semester,
+            StudentScore.status == Status.GRADED  # Exclude PENDING scores
         )
-        .join(Grade, Grade.student_id == Student.id)
-        .filter(Student.classroom_id == classroom_id)
         .group_by(Student.id)
-        .order_by(gpa_calc.desc())
-        .all())
-        return leaderboard 
+        .all()
+        )
+        formatted_leaderboard = [LeaderboardRow(student_id=row.student_id,
+                                                student_name=row.student_name,
+                                                gpa=row.gpa,
+                                                class_rank=row.class_rank)
+                                                for row in leaderboard]
+        return formatted_leaderboard
+
+        
+    
+
+
 
         
     

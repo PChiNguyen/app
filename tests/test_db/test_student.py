@@ -2,10 +2,13 @@
 import sys
 import os
 import uuid
+
+from db.session import Sessionlocal
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) 
 
 import pytest
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 from sqlalchemy import text
 from db.models.student import Student
 from db.models.classroom import Classroom
@@ -32,7 +35,7 @@ def test_student_validation_all_cases():
 
 ### test ở db 
 
-def test_hacker_insert_invalid_student_name(db_session):
+def test_hacker_insert_invalid_student_name(db_session: Session):
     sql= text("""INSERT INTO students(id,name,classroom_id)
               VALUES(:id,:name,:class_id)""")
     data= {
@@ -50,7 +53,7 @@ def test_hacker_insert_invalid_student_name(db_session):
     
 
 
-def test_student_classroom_relationship(db_session):
+def test_student_classroom_relationship(db_session: Session):
     """Test xem quan hệ giữa Student và Classroom có hoạt động không""" 
     teacher= User(username="teacher1",
                     email="teacher1@abc.com",
@@ -71,7 +74,7 @@ def test_student_classroom_relationship(db_session):
     assert math_class.students[1].name == "Student Two"
     assert student1.classroom.name == "Math"
     assert student2.classroom.name == "Math"
-def test_student_with_nonexistent_classroom(db_session):
+def test_student_with_nonexistent_classroom(db_session: Session):
     with pytest.raises(IntegrityError) as exinfo:
         db_session.add(Student(name="Student Three", classroom_id= uuid.uuid4()))
         db_session.commit() 

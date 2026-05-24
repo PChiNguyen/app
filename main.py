@@ -3,14 +3,17 @@ from fastapi.middleware.cors import CORSMiddleware
 
 
 # Import your routers
-from api import auth, classrooms, grades, students
+from api import auth, classrooms, students
 
 from db.base import Base # Or wherever your Base is located
 from db.session import engine # Import the engine you just updated
 from db.models.user import User
 from db.models.classroom import Classroom
 from db.models.student import Student
-from db.models.grade import Grade
+from db.models.subject import  Subject
+from db.models.assessment_template import  AssessmentTemplate
+from db.models.student_score import StudentScore 
+
 
 # This tells SQLAlchemy to look at all your models and build the SQLite file!
 Base.metadata.create_all(bind=engine)
@@ -46,7 +49,6 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(classrooms.router, prefix="/api/classrooms", tags=["Classrooms"])
 app.include_router(students.router, prefix="/api/students", tags=["Students"])
-app.include_router(grades.router, prefix="/api/grades", tags=["Grades"])
 
 
 

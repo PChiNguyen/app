@@ -8,6 +8,7 @@ from db.models.classroom import Classroom
 from db.models.user import User    
 from db.models.student import Student   
 from sqlalchemy import text 
+from sqlalchemy.orm import Session
 
 from sqlalchemy.exc import IntegrityError
 
@@ -22,7 +23,7 @@ def test_validate_classroom_name_invalid_characters():
 def test_validate_teacher_id_invalid():
     with pytest.raises((ValueError,IntegrityError)) as exinfo:
         Classroom(name="Math", teacher_id= "not-a-uuid") 
-def test_classroom_with_nonexistent_teacher(db_session):
+def test_classroom_with_nonexistent_teacher(db_session: Session):
     with pytest.raises(IntegrityError) as exinfo:
         db_session.add(Classroom(name="Math", teacher_id= uuid.uuid4()))
         db_session.commit()
@@ -30,7 +31,7 @@ def test_classroom_with_nonexistent_teacher(db_session):
 
 ### Test ở db 
 
-def test_hacker_insert_invalid_classroom_name(db_session):
+def test_hacker_insert_invalid_classroom_name(db_session: Session):
     teacher= User(username="teacher1",
                     email="teacher1@abc.com",
                         password_hash="abc",
@@ -62,7 +63,7 @@ def test_hacker_insert_invalid_classroom_name(db_session):
     db_session.rollback() 
 
 
-def test_relationship(db_session):
+def test_relationship(db_session: Session):
     """Test xem quan hệ giữa Classroom và User có hoạt động không""" 
 
     teacher= User(username="teacher1",

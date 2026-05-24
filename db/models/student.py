@@ -1,8 +1,12 @@
 import uuid
 import re 
+from typing import TYPE_CHECKING
 from sqlalchemy import String, ForeignKey, CheckConstraint,UUID as SQLUUID  
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates 
 from db.base import Base
+if TYPE_CHECKING:
+    from db.models.classroom import Classroom
+    from db.models.student_score import StudentScore
 class Student(Base):
     __tablename__= 'students'
 
@@ -20,9 +24,9 @@ class Student(Base):
                                                    nullable= True
                                                 
                                                    )
-    classroom= relationship('Classroom', back_populates='students')
-    # Use Mapped[list["Grade"]]!
-    grades= relationship('Grade', back_populates='student', cascade= "all, delete-orphan")
+    classroom: Mapped["Classroom"]= relationship('Classroom', back_populates='students')
+    # Use Mapped[list["StudentScore"]]!
+    student_scores: Mapped[list["StudentScore"]]= relationship('StudentScore', back_populates='student', cascade="all, delete-orphan")
 
 
     __table_args__= (
@@ -49,7 +53,10 @@ class Student(Base):
             raise ValueError("classroom_id không được để trống")
         if not isinstance(input_value, uuid.UUID):
             raise ValueError("classroom_id phải là một UUID hợp lệ")
-        return input_value
+        return input_value 
+    
+    
+    
     
     
         

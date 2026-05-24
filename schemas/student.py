@@ -23,3 +23,12 @@ class StudentRead(StudentBase):
     id: UUID
 
     model_config = ConfigDict(from_attributes=True) 
+
+class ReportCardDTO(BaseModel):
+    student_id: UUID
+    student_name: str
+    gpa: float
+    class_rank: int
+    model_config = ConfigDict(from_attributes=True)
+
+

@@ -6,6 +6,10 @@ from sqlalchemy import Connection, Engine, create_engine, event
 from sqlalchemy.orm import sessionmaker, Session 
 from fastapi.testclient import TestClient
 from api.deps import get_current_user
+from db.models.assessment_template import AssessmentTemplate
+from db.models.classroom import Classroom
+from db.models.student import Student
+from db.models.subject import Subject
 from db.models.user import User, UserRole
 from db.session import get_db
 from main import app
@@ -14,7 +18,6 @@ from core.config import settings
 
 from db.base import Base
 from repositories.classroom_repo import ClassroomRepository
-from repositories.grade_repo import GradeRepository
 from repositories.student_repo import StudentRepository 
 
 
@@ -22,7 +25,7 @@ MOCK_TEACHER_ID = uuid.uuid4()
 
 
 @pytest.fixture
-def mock_teacher(db_session):
+def mock_teacher(db_session: Session):
     """Global fixture to create a teacher. Only runs when requested."""
     teacher = User(
         id=MOCK_TEACHER_ID,
@@ -37,27 +40,46 @@ def mock_teacher(db_session):
     return teacher
 
 @pytest.fixture
-def mock_classroom(db_session, mock_teacher):
+def mock_classroom(db_session: Session, mock_teacher: User):
     """Global fixture to create a classroom. Notice no 'autouse=True'."""
     repo = ClassroomRepository(db_session)
     classroom = repo.create(name="Science", teacher_id=mock_teacher.id)
     return classroom
 
 @pytest.fixture
-def mock_student(db_session, mock_classroom):
+def mock_student(db_session: Session, mock_classroom: Classroom):
     repo = StudentRepository(db_session)
     student = repo.create(name="Thảo Nguyên", classroom_id = mock_classroom.id)
     return student
 @pytest.fixture
-def mock_student_grades(db_session, mock_student):
-    # Create some mock grades for the student
-    grade_repo= GradeRepository(db_session)
-    grade1 = grade_repo.create(subject="Math", score=8.5, student_id=mock_student.id)
-    grade2 = grade_repo.create(subject="Science", score=9.0, student_id=mock_student.id)
+def mock_subject(db_session: Session):
+    from db.models.subject import Subject
+    subject = Subject(name="Math")
+    db_session.add(subject)
+    db_session.commit()
+    db_session.refresh(subject)
+    return subject
+@pytest.fixture
+def mock_assessment_template(db_session: Session, mock_subject: Subject):
+    from db.models.assessment_template import AssessmentTemplate
+    template = AssessmentTemplate(name="Math Test", type="test", semester=1, subject_id=mock_subject.id)
+    db_session.add(template)
+    db_session.commit()
+    db_session.refresh(template)
+    return template
+@pytest.fixture
+def mock_student_score(db_session: Session, mock_student: Student, mock_assessment_template: AssessmentTemplate     ):
+    from db.models.student_score import StudentScore
+    score = StudentScore(student_id=mock_student.id, assessment_template_id=mock_assessment_template.id, score=9.5)
+    db_session.add(score)
+    db_session.commit()
+    db_session.refresh(score)
+    return score
+
 
 
 @pytest.fixture(autouse=True)
-def setup_dependency_override(mock_teacher):
+def setup_dependency_override(mock_teacher: User):
     """
     autouse=True means this runs automatically for every test in this file.
     It takes the mock_teacher we just saved, and hands it directly to FastAPI.
@@ -101,7 +123,9 @@ def engine():
     from db.models.user import User
     from db.models.classroom import Classroom
     from db.models.student import Student
-    from db.models.grade import Grade
+    from db.models.subject import  Subject
+    from db.models.assessment_template import  AssessmentTemplate
+    from db.models.student_score import StudentScore 
 
     # 3. Build the structure (This is outside the listener!)
     Base.metadata.create_all(bind=_engine)

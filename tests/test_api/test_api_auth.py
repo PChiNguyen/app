@@ -1,13 +1,15 @@
+from fastapi.testclient import TestClient
 import pytest
 
 
 from repositories.user_repo import UserRepository
 from core.security import get_password_hash
+from sqlalchemy.orm import Session
 
 
 
 
-def test_login_success(client, db_session):
+def test_login_success(client: TestClient, db_session: Session):
     user_repo = UserRepository(db_session)
     
     user = user_repo.create(
@@ -34,7 +36,7 @@ def test_login_success(client, db_session):
         
     assert response.status_code == 200
 
-def test_login_wrong_password(client):
+def test_login_wrong_password(client: TestClient):
     """Test that wrong password returns 401"""
     login_data = {
         "username": "test@example.com",
