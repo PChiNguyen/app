@@ -30,19 +30,19 @@ def test_create_classroom(classroom_repo, teacher):
     assert classroom.id is not None
     assert classroom.name=="Math"
     assert classroom.teacher_id==teacher.id
-def create_classroom_with_nonexistent_teacher(classroom_repo):
+def create_classroom_with_nonexistent_teacher(classroom_repo: ClassroomRepository):
     with pytest.raises(IntegrityError):
         classroom_repo.create(name="Math",teacher_id=uuid.uuid4())
    
 
-def test_get_classroom_by_id(classroom_repo, teacher):
+def test_get_classroom_by_id(classroom_repo: ClassroomRepository, teacher: User):
 
     classroom= classroom_repo.create(name="Science", teacher_id=teacher.id)
     found_classroom= classroom_repo.get_by_id(classroom.id)
     assert found_classroom is not None
     assert found_classroom.name=="Science"
     assert found_classroom.teacher_id==teacher.id       
-def test_get_classrooms_by_teacher_id(classroom_repo, teacher):
+def test_get_classrooms_by_teacher_id(classroom_repo: ClassroomRepository, teacher: User):
    
     
     classroom1= classroom_repo.create(name="History", teacher_id=teacher.id)
@@ -52,7 +52,7 @@ def test_get_classrooms_by_teacher_id(classroom_repo, teacher):
     assert classrooms[0].name=="History"
     assert classrooms[1].name=="Geography"      
 
-def test_delete_classroom(classroom_repo, teacher):
+def test_delete_classroom(classroom_repo: ClassroomRepository, teacher: User):
 
     classroom= classroom_repo.create(name="Art", teacher_id=teacher.id)
     result= classroom_repo.delete(classroom.id)

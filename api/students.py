@@ -74,42 +74,7 @@ def delete_student(*, student_id: UUID,
             status_code= status.HTTP_404_NOT_FOUND,
             detail= "Student not found"
         )
-    return None
-
-# 2. THE STUDENT ENDPOINT
-@router.get('/me/report-card')
-def get_report_card(*, db: Session = Depends(get_db),
-                    current_user= Depends(get_current_student)):
-    repo= StudentRepository(db)
-    report_card = repo.get_student_rank_and_gpa(current_user.id)
-    if not report_card:
-        raise HTTPException(
-            status_code= status.HTTP_404_NOT_FOUND,
-            detail= "Report card not found"
-        )
-    return {
-        "student_id": report_card.student_id,
-        "name": report_card.student_name,
-        "gpa": round(report_card.gpa, 1) if report_card.gpa else 0.0,
-        "class_rank": report_card.rank
-    }
-@router.get('/{student_id}/report-card')
-def get_student_report_card_for_teacher(*, student_id: UUID,
-                                db: Session = Depends(get_db),
-                                current_user= Depends(get_current_teacher)):
-    repo= StudentRepository(db)
-    report_card = repo.get_student_rank_and_gpa(student_id)
-    if not report_card:
-        raise HTTPException(
-            status_code= status.HTTP_404_NOT_FOUND,
-            detail= "Report card not found"
-        )
-    return {
-        "student_id": report_card.student_id,
-        "name": report_card.student_name,
-        "gpa": round(report_card.gpa, 1) if report_card.gpa else 0.0,
-        "class_rank": report_card.rank
-    }
+    return None      
 
 
 

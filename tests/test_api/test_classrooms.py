@@ -1,10 +1,11 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from db.models.grade import Grade
-from repositories.grade_repo import GradeRepository
 
+
+from db.models.classroom import Classroom
 from tests.conftest import MOCK_TEACHER_ID 
+from sqlalchemy.orm import Session
 
 
 
@@ -22,7 +23,7 @@ from tests.conftest import MOCK_TEACHER_ID
 # THE supposed to be successful tests!
 # ==========================================
 
-def test_create_classroom(client: TestClient, db_session): # Pass db_session to trigger fixtures
+def test_create_classroom(client: TestClient, db_session: Session): # Pass db_session to trigger fixtures
     response = client.post("/api/classrooms/", json={
         "name": "Math"
     })
@@ -35,7 +36,7 @@ def test_create_classroom(client: TestClient, db_session): # Pass db_session to 
     
     assert "id" in data
 
-def test_read_classrooms(client: TestClient, db_session, mock_classroom):
+def test_read_classrooms(client: TestClient, db_session: Session, mock_classroom):
     # This works now! mock_teacher is already in the DB thanks to the fixture.
   
     
@@ -49,7 +50,7 @@ def test_read_classrooms(client: TestClient, db_session, mock_classroom):
     # FIX 3: API responses are JSON strings, so convert the UUID to check it!
 
 
-def test_delete_classroom(client: TestClient, db_session, mock_classroom):
+def test_delete_classroom(client: TestClient, db_session: Session, mock_classroom: Classroom):
     
     # Now, delete the classroom
     delete_response = client.delete(f"/api/classrooms/{str(mock_classroom.id)}")
@@ -59,7 +60,7 @@ def test_delete_classroom(client: TestClient, db_session, mock_classroom):
     get_response = client.get(f"/api/classrooms/{str(mock_classroom.id)}")
     assert get_response.status_code == 404
 
-def test_read_classroom(client: TestClient, db_session, mock_classroom):
+def test_read_classroom(client: TestClient, db_session: Session, mock_classroom: Classroom):
     response = client.get(f"/api/classrooms/{str(mock_classroom.id)}")
     assert response.status_code == 200
     
@@ -67,7 +68,7 @@ def test_read_classroom(client: TestClient, db_session, mock_classroom):
     assert data["name"] == "Science"
    
     
-def test_update_classroom(client: TestClient, db_session, mock_classroom):
+def test_update_classroom(client: TestClient, db_session: Session, mock_classroom: Classroom):
     response = client.put(f"/api/classrooms/{str(mock_classroom.id)}", json={
         "name": "Updated Science"
     })
@@ -83,13 +84,4 @@ def test_update_classroom(client: TestClient, db_session, mock_classroom):
 
 
 
-    
-def test_get_classroom_ranking(client: TestClient, db_session, mock_classroom,mock_student_grades):
-    response = client.get(f"/api/classrooms/{str(mock_classroom.id)}/ranking")
-    assert response.status_code == 200, f"Failed to get classroom ranking: {response.json()}"
-    data = response.json()
-    assert isinstance(data, list), f"Expected a list of students with GPA, got: {data}"
-    assert len(data) == 1, f"Expected 1 student in the classroom, got: {len(data)}"
-    assert data[0]["name"] == "Thảo Nguyên", f"Expected student name to be 'Thảo Nguyên', got: {data[0]['name']}"
-    assert data[0]["gpa"] == (8.5 + 9.0) / 2, f"Expected GPA to be 8.75, got: {data[0]['gpa']}"
 

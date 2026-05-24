@@ -2,7 +2,11 @@ import uuid
 import enum
 import re   
 
-from sqlalchemy import String, Enum as SQLEnum, CheckConstraint,UUID
+from sqlalchemy import String, Enum as SQLEnum, CheckConstraint, UUID, ForeignKey, Integer
+from typing import Optional, TYPE_CHECKING
+if TYPE_CHECKING:
+    from db.models.subject import Subject
+
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 from db.base import Base
@@ -42,8 +46,15 @@ class User(Base):
         default=UserRole.STUDENT, 
         nullable=False
     )
+    # Admin and Student will leave this blank (NULL). 
+    # Teachers MUST have this filled out.
+    subject_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey('subjects.id', ondelete='SET NULL'), nullable=True)
 
     classrooms = relationship('Classroom', back_populates='teacher', cascade="save-update, merge")
+    # We use Optional because Students and Admins will not have a subject
+    subject: Mapped[Optional["Subject"]] = relationship('Subject', back_populates='teachers')
+
+
 
 
     __table_args__ = (
@@ -55,6 +66,11 @@ class User(Base):
             
             # Check đơn giản để SQLite không nổ lỗi:
             CheckConstraint("length(username) >= 4", name='username_min_length'),
+            CheckConstraint(
+            "(role = 'teacher' AND subject_id IS NOT NULL) OR (role != 'teacher' AND subject_id IS NULL)",
+            name="enforce_teacher_subject_rule"
+        ),
+    
         )
     @validates('username')
     def validate_username(self,key,input_value:str):
@@ -96,6 +112,18 @@ class User(Base):
         if len(input_value) > 255:
             raise ValueError("Địa chỉ email không được vượt quá 255 ký tự")
         return input_value 
+    
+    @validates('subject_id')
+    def validate_subject_id(self, key, input_value):
+        if self.role == UserRole.TEACHER:
+            if input_value is None:
+                raise ValueError("Giáo viên phải có subject_id")
+            if not isinstance(input_value, int):
+                raise ValueError("subject_id phải là một số nguyên hợp lệ")
+        else:
+            if input_value is not None:
+                raise ValueError("Chỉ giáo viên mới được phép có subject_id")
+        return input_value
     
 # ... các import khác
 

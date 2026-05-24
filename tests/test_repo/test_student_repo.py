@@ -2,6 +2,8 @@
 import sys
 import os
 import uuid
+
+from db.models.classroom import Classroom
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) 
 
 import pytest 
@@ -33,24 +35,24 @@ def student_repo(db_session):
 def test_create_student(student_repo,classroom):
     student_id = student_repo.create(name="Student One", classroom_id=classroom.id) 
     assert student_id is not None
-def create_with_non_existent_classroom(student_repo):
+def create_with_non_existent_classroom(student_repo: StudentRepository):
     with pytest.raises(IntegrityError):
         student_repo.create(name="Student One", classroom_id=uuid.uuid4())
 
-def test_get_by_id(student_repo,classroom):
+def test_get_by_id(student_repo: StudentRepository, classroom: Classroom):
     student= student_repo.create(name="Student Two", classroom_id=classroom.id)
     student = student_repo.get_by_id(student.id)
     assert student is not None
     assert student.name == "Student Two"
 
-def test_get_by_classroom_id(student_repo,classroom):
+def test_get_by_classroom_id(student_repo: StudentRepository, classroom: Classroom):
     student1_id = student_repo.create(name="Student Three", classroom_id=classroom.id)
     student2_id = student_repo.create(name="Student Four", classroom_id=classroom.id)
     students = student_repo.get_by_classroom_id(classroom.id)
     assert len(students) == 2
     assert students[0].name == "Student Three"
     assert students[1].name == "Student Four"
-def test_delete_student(student_repo,classroom):
+def test_delete_student(student_repo: StudentRepository, classroom: Classroom):
     student = student_repo.create(name="Student Five", classroom_id=classroom.id)
     result= student_repo.delete(student.id)
     assert result is True             
