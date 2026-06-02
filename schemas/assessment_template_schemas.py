@@ -8,6 +8,7 @@ class AssessmentTemplateCreate(BaseModel):
     semester: Semester
     # 🚨 NO COEFFICIENT HERE! The backend auto-fills it safely.
 
+
 class AssessmentTemplateResponse(BaseModel):
     id: int
     subject_id: int

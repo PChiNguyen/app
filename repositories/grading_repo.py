@@ -1,3 +1,5 @@
+from typing import List
+from dataclasses import dataclass
 from uuid import UUID 
 from sqlalchemy import case, func
 from sqlalchemy.orm import Session 
@@ -6,6 +8,40 @@ from db.models.student_score import Status
 
 from db.models.assessment_template import AssessmentTemplate
 from db.models.student_score import StudentScore
+
+                                ## messi 
+
+@dataclass 
+class SubjectAverage:
+    student_id: UUID
+    student_name: str
+    subject_id: UUID
+    sub_avg: float
+    completed_tests: int
+    required_tests: int
+
+@dataclass
+class SemesterGPA:
+    student_id: UUID
+    student_name: str
+    semester_gpa: float
+
+@dataclass
+class YearlySubjectAverage:
+    student_id: UUID
+    student_name: str
+    subject_id: UUID
+    yearly_sub_avg: float
+
+@dataclass
+class YearlyGPA:
+    student_id: UUID
+    student_name: str
+    yearly_gpa: float
+
+
+
+
 
 
 class GradingRepository:
@@ -38,7 +74,11 @@ class GradingRepository:
                 Student.id.label("student_id"),
                 Student.name.label("student_name"),
                 AssessmentTemplate.subject_id.label("subject_id"),
-                valid_sub_avg_calc.label("sub_avg")
+                valid_sub_avg_calc.label("sub_avg"),
+                
+                # 🚨 THE X-RAY COLUMNS (We expose the secret math!)
+                func.count(StudentScore.id).label("completed_tests"),
+                syllabus_counts.c.total_required.label("required_tests")
             )
             .join(StudentScore, Student.id == StudentScore.student_id)
             .join(AssessmentTemplate, StudentScore.assessment_template_id == AssessmentTemplate.id)
@@ -132,7 +172,7 @@ class GradingRepository:
                 hk1_sq.c.student_id,
                 hk1_sq.c.student_name,
                 hk1_sq.c.subject_id,
-                yearly_calc.label("yearly_avg")
+                yearly_calc.label("yearly_sub_avg")
             )
             .join(hk2_sq,
                   (hk1_sq.c.student_id == hk2_sq.c.student_id) & 
@@ -198,78 +238,133 @@ class GradingRepository:
 
 
 ## CLASSROOM (FOR TEACHERS) VIEWS
-    def get_classroom_all_subject_averages_by_semester(self, classroom_id: UUID, semester: int):
+    def get_classroom_all_subject_averages_by_semester(self, classroom_id: UUID, semester: int)->List[SubjectAverage]:
         """Fetches every single subject average for every student in the class."""
         
         # 1. Grab your masterpiece Lego Block 1
         sub_avg_query = self._build_subject_averages_subquery(classroom_id, semester)
         
-        # 2. Tell the Database to actually execute it and return the rows!
-        # Notice we are querying the virtual table directly and using .all()
-        return self.db.query(sub_avg_query).all()
+     
+        raw_rows = self.db.query(sub_avg_query).all()
+        return [SubjectAverage(
+            student_id=row.student_id,
+            student_name=row.student_name,
+            subject_id=row.subject_id,
+            sub_avg=row.sub_avg,
+            completed_tests=row.completed_tests,
+            required_tests=row.required_tests,
+        ) for row in raw_rows]
     
-    def get_classroom_semester_gpas(self, classroom_id: UUID, semester: int):
+    def get_classroom_semester_gpas(self, classroom_id: UUID, semester: int)->List[SemesterGPA]:
         """Fetches the final Semester GPA for every student in the class."""
         
         # 1. Grab your masterpiece Lego Block 2
         gpa_query = self._build_semester_gpa_subquery(classroom_id, semester)
         
         # 2. Tell the Database to actually execute it and return the rows!
-        return self.db.query(gpa_query).all() 
-    def get_classroom_yearly_subject_averages(self, classroom_id: UUID):
+        raw_rows = self.db.query(gpa_query).all()
+        return [SemesterGPA(
+            student_id=row.student_id,
+            student_name=row.student_name,
+            semester_gpa=row.semester_gpa,
+        ) for row in raw_rows]
+    def get_classroom_yearly_subject_averages(self, classroom_id: UUID)->List[YearlySubjectAverage]:
         """Fetches every single subject average for the whole year (Cả Năm) for every student in the class."""
         
         # 1. Grab your masterpiece Lego Block 3
         yearly_sub_avg_query = self._build_yearly_subject_averages_subquery(classroom_id)
+
+        raw_rows = self.db.query(yearly_sub_avg_query).all()
+        return [YearlySubjectAverage(
+            student_id=row.student_id,
+            student_name=row.student_name,
+            subject_id=row.subject_id,
+            yearly_sub_avg=row.yearly_sub_avg,
+        ) for row in raw_rows]
         
-        # 2. Tell the Database to actually execute it and return the rows!
-        return self.db.query(yearly_sub_avg_query).all()
-    def get_classroom_yearly_gpas(self, classroom_id: UUID):
+        
+    def get_classroom_yearly_gpas(self, classroom_id: UUID)->List[YearlyGPA]:
         """Fetches the final Yearly GPA (Cả Năm) for every student in the class."""
         
         # 1. Grab your masterpiece Lego Block 4
         yearly_gpa_query = self._build_yearly_gpa_subquery(classroom_id)
         
         # 2. Tell the Database to actually execute it and return the rows!
-        return self.db.query(yearly_gpa_query).all()
-    
+        raw_rows = self.db.query(yearly_gpa_query).all()
+        return [YearlyGPA(
+            student_id=row.student_id,
+            student_name=row.student_name,
+            yearly_gpa=row.yearly_gpa,
+        ) for row in raw_rows]
 
 
 
 ## STUDENT VIEWS
-    def get_student_subject_averages_by_semester(self, classroom_id: UUID, student_id: UUID, semester: int):
+    def get_student_subject_averages_by_semester(self, classroom_id: UUID, student_id: UUID, semester: int)->SubjectAverage:
         """Fetches every single subject average for a specific student."""
         
         # 1. Grab your masterpiece Lego Block 1
         sub_avg_query = self._build_subject_averages_subquery(classroom_id, semester)
         
         # 2. Tell the Database to actually execute it and return the rows for just this student!
-        return self.db.query(sub_avg_query).filter(sub_avg_query.c.student_id == student_id).all()
-    def get_student_semester_gpa(self, classroom_id: UUID, student_id: UUID, semester: int):
+        raw_row = self.db.query(sub_avg_query).filter(sub_avg_query.c.student_id == student_id).first()
+        if raw_row:
+            return SubjectAverage(
+                student_id=raw_row.student_id,
+                student_name=raw_row.student_name,
+                subject_id=raw_row.subject_id,
+                sub_avg=raw_row.sub_avg,
+            completed_tests=raw_row.completed_tests,
+            required_tests=raw_row.required_tests,
+        )
+        return None
+    def get_student_semester_gpa(self, classroom_id: UUID, student_id: UUID, semester: int)->SemesterGPA:
         """Fetches the final Semester GPA for a specific student."""
         
         # 1. Grab your masterpiece Lego Block 2
         gpa_query = self._build_semester_gpa_subquery(classroom_id, semester)
         
         # 2. Tell the Database to actually execute it and return the row for just this student!
-        return self.db.query(gpa_query).filter(gpa_query.c.student_id == student_id).first()
-    def get_student_yearly_subject_averages(self, classroom_id: UUID, student_id: UUID):
+        raw_row = self.db.query(gpa_query).filter(gpa_query.c.student_id == student_id).first()
+        if raw_row:
+            return SemesterGPA(
+                student_id=raw_row.student_id,
+                student_name=raw_row.student_name,
+                semester_gpa=raw_row.semester_gpa,
+            )
+        return None
+    def get_student_yearly_subject_averages(self, classroom_id: UUID, student_id: UUID)->List[YearlySubjectAverage]:
         """Fetches every single subject average for the whole year (Cả Năm) for a specific student."""
         
         # 1. Grab your masterpiece Lego Block 3
         yearly_sub_avg_query = self._build_yearly_subject_averages_subquery(classroom_id)
         
         # 2. Tell the Database to actually execute it and return the rows for just this student!
-        return self.db.query(yearly_sub_avg_query).filter(yearly_sub_avg_query.c.student_id == student_id).all()
-    def get_student_yearly_gpa(self, classroom_id: UUID, student_id: UUID):
+        raw_row = self.db.query(yearly_sub_avg_query).filter(yearly_sub_avg_query.c.student_id == student_id).first()
+        if raw_row:
+            return YearlySubjectAverage(
+                student_id=raw_row.student_id,
+                student_name=raw_row.student_name,
+                subject_id=raw_row.subject_id,
+                yearly_sub_avg=raw_row.yearly_sub_avg,
+            )
+        return None
+    def get_student_yearly_gpa(self, classroom_id: UUID, student_id: UUID)->YearlyGPA:
         """Fetches the final Yearly GPA (Cả Năm) for a specific student."""
         
         # 1. Grab your masterpiece Lego Block 4
         yearly_gpa_query = self._build_yearly_gpa_subquery(classroom_id)
         
         # 2. Tell the Database to actually execute it and return the row for just this student!
-        return self.db.query(yearly_gpa_query).filter(yearly_gpa_query.c.student_id == student_id).first()
-    
+        raw_row = self.db.query(yearly_gpa_query).filter(yearly_gpa_query.c.student_id == student_id).first()
+        if raw_row:
+            return YearlyGPA(
+                student_id=raw_row.student_id,
+                student_name=raw_row.student_name,
+                yearly_gpa=raw_row.yearly_gpa,
+            )
+        return None
+
     
 
 

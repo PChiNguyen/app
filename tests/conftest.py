@@ -60,7 +60,7 @@ def mock_subject(db_session: Session):
     db_session.refresh(subject)
     return subject
 @pytest.fixture
-def mock_assessment_template(db_session: Session, mock_subject: Subject):
+def mock_assessment_template_semester1(db_session: Session, mock_subject: Subject):
     from db.models.assessment_template import AssessmentTemplate
     template = AssessmentTemplate(name="Math Test", type="test", semester=1, subject_id=mock_subject.id)
     db_session.add(template)
@@ -68,13 +68,32 @@ def mock_assessment_template(db_session: Session, mock_subject: Subject):
     db_session.refresh(template)
     return template
 @pytest.fixture
-def mock_student_score(db_session: Session, mock_student: Student, mock_assessment_template: AssessmentTemplate     ):
+def mock_assessment_template_semester2(db_session: Session, mock_subject: Subject):
+    from db.models.assessment_template import AssessmentTemplate
+    template = AssessmentTemplate(name="Math Test", type="test", semester=2, subject_id=mock_subject.id)
+    db_session.add(template)
+    db_session.commit()
+    db_session.refresh(template)
+    return template
+
+## Mock Scores 
+@pytest.fixture
+def mock_student_score_semester1(db_session: Session, mock_student: Student, mock_assessment_template_semester1: AssessmentTemplate):
     from db.models.student_score import StudentScore
-    score = StudentScore(student_id=mock_student.id, assessment_template_id=mock_assessment_template.id, score=9.5)
+    score = StudentScore(student_id=mock_student.id, assessment_template_id=mock_assessment_template_semester1.id, score=9.5)
     db_session.add(score)
     db_session.commit()
     db_session.refresh(score)
     return score
+@pytest.fixture
+def mock_student_score_semester2(db_session: Session, mock_student: Student, mock_assessment_template_semester2: AssessmentTemplate):
+    from db.models.student_score import StudentScore
+    score = StudentScore(student_id=mock_student.id, assessment_template_id=mock_assessment_template_semester2.id, score=8.0)
+    db_session.add(score)
+    db_session.commit()
+    db_session.refresh(score)
+    return score
+
 
 
 

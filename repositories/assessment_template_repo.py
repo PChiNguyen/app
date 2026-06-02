@@ -2,15 +2,17 @@ from uuid import UUID
 from sqlalchemy import func 
 from db.models.assessment_template import AssessmentTemplate
 from sqlalchemy.orm import Session
-from typing import Optional   
+from typing import Optional
+
+from schemas.assessment_template_schemas import AssessmentTemplateCreate   
 
 
 class AssessmentTemplateRepository:
     def __init__(self, db: Session):
         self.db = db
     
-    def create(self,subject_id: int, name: str, type: str, semester: int) -> AssessmentTemplate:
-        new_template = AssessmentTemplate(subject_id=subject_id, name=name, type=type, semester=semester)
+    def create(self, template_in: AssessmentTemplateCreate) -> AssessmentTemplate:
+        new_template = AssessmentTemplate(**template_in.model_dump())
         self.db.add(new_template)
         self.db.commit()
         self.db.refresh(new_template)

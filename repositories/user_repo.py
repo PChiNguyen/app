@@ -1,5 +1,4 @@
 from uuid import UUID 
-import uuid 
 from sqlalchemy import exists 
 from sqlalchemy.orm import Session 
 from db.models.user import User
@@ -29,7 +28,7 @@ class UserRepository:
         # If it's a string, turn it back into a UUID object
         if isinstance(user_id, str):
             try:
-                user_id = uuid.UUID(user_id)
+                user_id = UUID(user_id)
             except ValueError:
                 return None # Not a valid UUID, so user can't exist
                 
