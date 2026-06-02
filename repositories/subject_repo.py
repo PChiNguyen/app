@@ -14,3 +14,7 @@ class SubjectRepository:
 
     def get_by_name(self, name: str) -> Optional[Subject]:
         return self.db.query(Subject).filter(Subject.name == name).first()
+    
+
+
+    

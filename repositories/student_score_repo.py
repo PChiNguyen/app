@@ -28,6 +28,9 @@ class StudentScoreRepository:
         
         self.db.add_all(empty_scores)
         self.db.commit()
+        for score in empty_scores:
+            self.db.refresh(score)
+        
         # we can not refresh because there are multiple objects 
         return empty_scores
 

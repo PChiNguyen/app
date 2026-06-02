@@ -63,38 +63,7 @@ class ClassroomRepository:
         return self.db.query(Classroom).offset(skip).limit(limit).all()  
     
 
-    def get_classroom_leaderboard(self, classroom_id: UUID, semester: int) -> List[LeaderboardRow]:
-        # This is a more complex query that joins the students and their scores to calculate GPA and rank.
-        # It uses SQLAlchemy's func.rank() to calculate the rank based on GPA.
-        gpa_calc = func.round(
-            func.sum(StudentScore.score * AssessmentTemplate.coefficient) / func.sum(AssessmentTemplate.coefficient), 2)
-         
 
-        rank_calc = func.rank().over(order_by=gpa_calc.desc())
-
-        leaderboard= (self.db.query(
-            Student.id.label("student_id"),
-            Student.name.label("student_name"),
-            gpa_calc.label("gpa"),
-            rank_calc.label("class_rank"),
-        ).join(
-            StudentScore, Student.id == StudentScore.student_id
-        ).join(
-            AssessmentTemplate, StudentScore.assessment_template_id == AssessmentTemplate.id
-        ).filter(
-            Student.classroom_id == classroom_id,
-            AssessmentTemplate.semester == semester,
-            StudentScore.status == Status.GRADED  # Exclude PENDING scores
-        )
-        .group_by(Student.id)
-        .all()
-        )
-        formatted_leaderboard = [LeaderboardRow(student_id=row.student_id,
-                                                student_name=row.student_name,
-                                                gpa=row.gpa,
-                                                class_rank=row.class_rank)
-                                                for row in leaderboard]
-        return formatted_leaderboard
 
         
     
