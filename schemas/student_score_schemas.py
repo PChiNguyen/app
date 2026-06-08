@@ -13,6 +13,7 @@ class StudentScoreCreate(BaseModel):
 class StudentScoreUpdate(BaseModel):
     # When updating a score, you shouldn't be able to change the student or the test!
     # You ONLY update the number itself.
+    
     score: Optional[float] = Field(default=None, ge=0, le=10, description="Điểm số từ 0 đến 10")
 
 class StudentScoreResponse(BaseModel):

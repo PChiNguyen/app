@@ -10,7 +10,7 @@ from core import security
 from core.config import settings
 from repositories.user_repo import UserRepository
 from schemas.auth import Token
-from schemas.user import UserRead 
+from schemas.user_schemas import UserRead 
 
 router= APIRouter() 
 

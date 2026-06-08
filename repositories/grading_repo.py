@@ -15,7 +15,7 @@ from db.models.student_score import StudentScore
 class SubjectAverage:
     student_id: UUID
     student_name: str
-    subject_id: UUID
+    subject_id: int
     sub_avg: float
     completed_tests: int
     required_tests: int
@@ -30,7 +30,7 @@ class SemesterGPA:
 class YearlySubjectAverage:
     student_id: UUID
     student_name: str
-    subject_id: UUID
+    subject_id: int
     yearly_sub_avg: float
 
 @dataclass
@@ -307,16 +307,16 @@ class GradingRepository:
         sub_avg_query = self._build_subject_averages_subquery(classroom_id, semester)
         
         # 2. Tell the Database to actually execute it and return the rows for just this student!
-        raw_row = self.db.query(sub_avg_query).filter(sub_avg_query.c.student_id == student_id).first()
-        if raw_row:
-            return SubjectAverage(
-                student_id=raw_row.student_id,
-                student_name=raw_row.student_name,
-                subject_id=raw_row.subject_id,
-                sub_avg=raw_row.sub_avg,
-            completed_tests=raw_row.completed_tests,
-            required_tests=raw_row.required_tests,
-        )
+        raw_rows = self.db.query(sub_avg_query).filter(sub_avg_query.c.student_id == student_id).all()
+        if raw_rows:
+            return [SubjectAverage(
+                student_id=row.student_id,
+                student_name=row.student_name,
+                subject_id=row.subject_id,
+                sub_avg=row.sub_avg,
+                completed_tests=row.completed_tests,
+                required_tests=row.required_tests,
+            ) for row in raw_rows]
         return None
     def get_student_semester_gpa(self, classroom_id: UUID, student_id: UUID, semester: int)->SemesterGPA:
         """Fetches the final Semester GPA for a specific student."""
@@ -340,14 +340,14 @@ class GradingRepository:
         yearly_sub_avg_query = self._build_yearly_subject_averages_subquery(classroom_id)
         
         # 2. Tell the Database to actually execute it and return the rows for just this student!
-        raw_row = self.db.query(yearly_sub_avg_query).filter(yearly_sub_avg_query.c.student_id == student_id).first()
-        if raw_row:
-            return YearlySubjectAverage(
-                student_id=raw_row.student_id,
-                student_name=raw_row.student_name,
-                subject_id=raw_row.subject_id,
-                yearly_sub_avg=raw_row.yearly_sub_avg,
-            )
+        raw_rows = self.db.query(yearly_sub_avg_query).filter(yearly_sub_avg_query.c.student_id == student_id).all()
+        if raw_rows:
+            return [YearlySubjectAverage(
+                student_id=row.student_id,
+                student_name=row.student_name,
+                subject_id=row.subject_id,
+                yearly_sub_avg=row.yearly_sub_avg,
+            ) for row in raw_rows]
         return None
     def get_student_yearly_gpa(self, classroom_id: UUID, student_id: UUID)->YearlyGPA:
         """Fetches the final Yearly GPA (Cả Năm) for a specific student."""

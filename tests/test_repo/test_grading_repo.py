@@ -56,10 +56,10 @@ def test_get_classroom_yearly_gpas(db_session: Session, mock_student_score_semes
 ### TESTING GRADING REPO METHODS FOR STUDENT'S VIEW
 def test_get_student_subject_averages_by_semester(db_session: Session, mock_student_score_semester1: StudentScore, mock_student: Student):
     repo = GradingRepository(db_session)
-    result: SubjectAverage = repo.get_student_subject_averages_by_semester(classroom_id = mock_student.classroom_id,student_id = mock_student.id, semester = 1)
-    assert result.student_id == mock_student.id
-    assert result.student_name == mock_student.name
-    assert result.sub_avg == mock_student_score_semester1.score
+    results: list[SubjectAverage] = repo.get_student_subject_averages_by_semester(classroom_id = mock_student.classroom_id,student_id = mock_student.id, semester = 1)
+    assert results[0].student_id == mock_student.id
+    assert results[0].student_name == mock_student.name
+    assert results[0].sub_avg == mock_student_score_semester1.score
 
 def test_get_student_semester_gpas(db_session: Session, mock_student_score_semester1: StudentScore, mock_student: Student):
     repo = GradingRepository(db_session)
@@ -70,10 +70,10 @@ def test_get_student_semester_gpas(db_session: Session, mock_student_score_semes
 
 def test_get_student_yearly_subject_averages(db_session: Session, mock_student_score_semester1: StudentScore, mock_student_score_semester2: StudentScore, mock_student: Student):
     repo = GradingRepository(db_session)
-    result: YearlySubjectAverage = repo.get_student_yearly_subject_averages(classroom_id = mock_student.classroom_id, student_id = mock_student.id)
-    assert result.student_id == mock_student.id
-    assert result.student_name == mock_student.name
-    assert result.yearly_sub_avg == (mock_student_score_semester1.score + mock_student_score_semester2.score * 2) / 3
+    results: list[YearlySubjectAverage] = repo.get_student_yearly_subject_averages(classroom_id = mock_student.classroom_id, student_id = mock_student.id)
+    assert results[0].student_id == mock_student.id
+    assert results[0].student_name == mock_student.name
+    assert results[0].yearly_sub_avg == (mock_student_score_semester1.score + mock_student_score_semester2.score * 2) / 3
 
 def test_get_student_yearly_gpas(db_session: Session, mock_student_score_semester1: StudentScore, mock_student_score_semester2: StudentScore, mock_student: Student):
     repo = GradingRepository(db_session)

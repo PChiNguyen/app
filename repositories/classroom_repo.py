@@ -60,7 +60,7 @@ class ClassroomRepository:
         # This tells PostgreSQL: "Skip the first X rows, and grab the next Y rows."
         # This is called 'Pagination' and it's crucial so your API doesn't crash 
         # if a school has 10,000 classrooms.
-        return self.db.query(Classroom).offset(skip).limit(limit).all()  
+        return self.db.query(Classroom).offset(skip).limit(limit).all() 
     
 
 
