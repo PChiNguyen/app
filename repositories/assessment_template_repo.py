@@ -1,6 +1,7 @@
 from uuid import UUID 
 from sqlalchemy import func 
 from db.models.assessment_template import AssessmentTemplate
+from db.models.student_score import StudentScore 
 from sqlalchemy.orm import Session
 from typing import Optional
 
@@ -10,9 +11,8 @@ from schemas.assessment_template_schemas import AssessmentTemplateCreate
 class AssessmentTemplateRepository:
     def __init__(self, db: Session):
         self.db = db
-    
-    def create(self, template_in: AssessmentTemplateCreate) -> AssessmentTemplate:
-        new_template = AssessmentTemplate(**template_in.model_dump())
+    def create(self, **kwargs) -> AssessmentTemplate:
+        new_template = AssessmentTemplate(**kwargs)
         self.db.add(new_template)
         self.db.commit()
         self.db.refresh(new_template)
@@ -40,3 +40,4 @@ class AssessmentTemplateRepository:
 
     def get_by_id(self, template_id: int) -> Optional[AssessmentTemplate]:
         return self.db.query(AssessmentTemplate).filter(AssessmentTemplate.id == template_id).first()
+    

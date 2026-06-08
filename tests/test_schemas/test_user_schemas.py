@@ -1,5 +1,5 @@
 import pytest 
-from schemas.user import UserCreate, UserRead, UserUpdate  
+from schemas.user_schemas import UserCreate, UserRead, UserUpdate  
 from pydantic import ValidationError 
 from uuid import uuid4
 

@@ -4,7 +4,6 @@ from repositories.user_repo import UserRepository
 from db.models.user import User
 from db.models.classroom import Classroom
 from db.models.student import Student
-from db.models.grade import Grade
 
 
 # If you don't have a get_password_hash function yet, just use a raw string for now

@@ -2,6 +2,7 @@ from uuid import UUID
 from sqlalchemy import func 
 from sqlalchemy.orm import Session
 from typing import Optional   
+from db.models.assessment_template import AssessmentTemplate
 from db.models.student_score import StudentScore
 
 
@@ -54,4 +55,9 @@ class StudentScoreRepository:
         return self.db.query(StudentScore).filter(StudentScore.student_id == student_id).all()
     def get_by_template_id(self, template_id: int) -> list[StudentScore]:
         return self.db.query(StudentScore).filter(StudentScore.assessment_template_id == template_id).all()
+    def get_by_student_id_and_subject_id(self, student_id: UUID, subject_id: UUID) -> list[StudentScore]:
+        return self.db.query(StudentScore).join(AssessmentTemplate).filter(
+            StudentScore.student_id == student_id,
+            AssessmentTemplate.subject_id == subject_id
+        ).all()
     

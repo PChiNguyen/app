@@ -5,6 +5,13 @@ from db.models.subject import Subject
 class SubjectRepository:
     def __init__(self, db: Session):
         self.db = db
+    
+    def create(self, name: str) -> Subject:
+        new_subject = Subject(name=name)
+        self.db.add(new_subject)
+        self.db.commit()
+        self.db.refresh(new_subject)
+        return new_subject
 
     def get_all(self) -> list[Subject]:
         return self.db.query(Subject).all()
