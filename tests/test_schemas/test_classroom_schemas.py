@@ -1,5 +1,6 @@
 import pytest
 from uuid import uuid4, UUID
+from db.models.user import User 
 
 from pydantic import ValidationError
 from schemas.classroom import ClassroomCreate, ClassroomRead
@@ -12,11 +13,11 @@ def teacher_id():
 
 # --- TESTS ---
 
-def test_create_classroom_success(teacher_id):
+def test_create_classroom_success(mock_teacher: User):
     """Tests that a classroom is created with valid data"""
-    data = {"name": "Lớp 11A1"}
+    data = {"name": "math", "teacher_id": mock_teacher.id}
     classroom = ClassroomCreate(**data)
-    assert classroom.name == "Lớp 11A1"
+    assert classroom.name == "math"
     
 
 @pytest.mark.parametrize("invalid_name", [
@@ -35,13 +36,13 @@ def test_read_classroom_from_orm(teacher_id):
     class MockClassroom:
         def __init__(self):
             self.id = uuid4()
-            self.name = "Lớp 12B2"
+            self.name = "math"
             self.teacher_id = teacher_id
             self.internal_notes = "Top secret school notes" # Should be filtered out
 
     classroom = ClassroomRead.model_validate(MockClassroom())
     
-    assert classroom.name == "Lớp 12B2"
+    assert classroom.name == "math"
     assert hasattr(classroom, "id")
     # Ensure internal fields don't leak to the API
     assert not hasattr(classroom, "internal_notes")

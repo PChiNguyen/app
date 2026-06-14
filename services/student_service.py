@@ -6,6 +6,8 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from uuid import UUID
 
+from schemas.student import StudentUpdate
+
 
 
 class StudentService:
@@ -28,17 +30,28 @@ class StudentService:
             raise HTTPException(status_code=404, detail="Student not found")
         return student
     
-    def update_student(self, student_id: UUID, updates: dict):
+    def update_student(self, student_id: UUID, updates_in: StudentUpdate):
+        """
+        Safely handles partial updates for students.
+        Validates the relational database links completely inside the Service layer.
+        """
+        # 1. BOUNCER CHECK: Does the student exist?
         student = self.student_repo.get_by_id(student_id)
         if not student:
             raise HTTPException(status_code=404, detail="Student not found")
+        
+        # 2. TRANSFORM: Convert the Pydantic data contract into a raw dictionary
+        # exclude_unset=True guarantees we ignore any fields the teacher didn't change!
+        updates = updates_in.model_dump(exclude_unset=True)
+        
+        # 3. BUSINESS RULES: If they are moving classrooms, verify the new class exists!
         for key, value in updates.items():
-            if not hasattr(student, key):
-                raise HTTPException(status_code=400, detail=f"Invalid field: {key}")
-            if key == "classroom_id":
+            if key == "classroom_id" and value is not None:
                 classroom = self.classroom_repo.get_by_id(value)
                 if not classroom:
                     raise HTTPException(status_code=404, detail="Classroom not found")
+            
+        # 4. EXECUTE: Pass the clean dictionary unpack straight down to the repository layer
         return self.student_repo.update(student_id, **updates)
     
     def delete_student(self, student_id: UUID):
@@ -56,6 +69,7 @@ class StudentService:
     def get_multi_students(self, skip: int = 0, limit: int = 100):
         ## no input validations in the service layer !!!, they should be handled in api/routers 
         return self.student_repo.get_multi(skip=skip, limit=limit)
+    
     
     
   

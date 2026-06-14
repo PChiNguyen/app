@@ -15,7 +15,8 @@ def check_username_rules(username: str) -> str:
 def check_password_rules(password: str) -> str:
     if len(password) < 8:
         raise ValueError("Password must be at least 8 characters long.")
-    password_regex = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+    # Added \^, #, and \- to the allowed lists
+    password_regex = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&\^#\-])[A-Za-z\d@$!%*?&\^#\-]{8,}$"
     if not re.match(password_regex, password):
         raise ValueError(
             "Password must contain at least one uppercase letter, "

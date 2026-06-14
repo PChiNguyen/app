@@ -9,7 +9,8 @@ from schemas.assessment_template_schemas import AssessmentTemplateCreate
 def test_create(db_session, mock_subject: Subject):
     repo = AssessmentTemplateRepository(db_session)
     template_in = AssessmentTemplateCreate(subject_id= mock_subject.id, name="hoyeyo", type="midterm", semester=1)
-    new_template = repo.create(template_in)
+    # ✅ THE FIX: Unpack the Pydantic object into **kwargs!
+    new_template: AssessmentTemplate = repo.create(**template_in.model_dump())
     
     assert new_template is not None
     assert new_template.id is not None

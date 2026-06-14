@@ -2,34 +2,34 @@ import pytest
 from schemas.user_schemas import UserCreate, UserRead, UserUpdate  
 from pydantic import ValidationError 
 from uuid import uuid4
-
-def test_user_create_success():
-    data={'username': "Nguyễn Võ Thảo Nguyên","email": "nguyen@gmail.com",'password_hash': "passwordhashsouoqwur", "password": "passwordhashsouoqwur", "role": "student"}
-    user = UserCreate(**data)
-    assert user.username == "Nguyễn Võ Thảo Nguyên"
+@pytest.fixture 
+def valid_user_data():
+    return {"username": "thaonguyencute", "email": "nguyen@gmail.com", "password": "Nguyen71760309^^", "role": "student"}
+def test_user_create_success(valid_user_data):
+    user = UserCreate(**valid_user_data)
+    assert user.username == "thaonguyencute"
     assert user.email == "nguyen@gmail.com"  
-def test_user_create_fail():
+def test_user_create_fail(valid_user_data):
     data={'username': "Nguyễn Võ Thảo Nguyên","email": "nguyen@gmail..", "password": "password", "role": "student"}
     with pytest.raises(ValidationError):
         UserCreate(**data) 
 
 def test_user_update_success():
-    data={'username': "Nguyễn Võ Thảo Nguyên","email": "nguyen@gmail.com", "password": "password", "role": "student"}
-    user = UserUpdate(**data)
-    assert user.username == "Nguyễn Võ Thảo Nguyên"
+    new_data={'username': "thaonguyendangiu","email": "nguyen@gmail.com", "password": "Nguyen71760309^^", "role": "student"}
+    user = UserUpdate(**new_data)
+    assert user.username == "thaonguyendangiu"
     assert user.email == "nguyen@gmail.com"   
-def read_user_success():
-    data={'username': "Nguyễn Võ Thảo Nguyên","email": "nguyen@gmail.com", "password": "password", "role": "student"}
-    user = UserRead(**data)
-    assert user.username == "Nguyễn Võ Thảo Nguyên"
+def read_user_success(valid_user_data):
+    user = UserRead(**valid_user_data)
+    assert user.username == "thaonguyencute"
     assert user.email == "nguyen@gmail.com"
 def read_user_from_orm():
     class MockTeacher:
         id= uuid4()  
-        username = "Nguyễn Võ Thảo Nguyên"
+        username = "thaonguyendangiu"
         email = "nguyen@gmail.com"
         password_hash= "password_hashhhh"
 
     user = UserRead.model_validate(MockTeacher())
-    assert user.username == "Nguyễn Võ Thảo Nguyên"
+    assert user.username == "thaonguyendangiu"
     assert user.email == "nguyen@gmail.com" 

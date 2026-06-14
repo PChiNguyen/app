@@ -3,6 +3,8 @@ from repositories.classroom_repo import ClassroomRepository
 from sqlalchemy.orm import Session
 from fastapi import HTTPException  
 
+from schemas.user_schemas import UserUpdate 
+
 
 
 class UserService:
@@ -22,13 +24,12 @@ class UserService:
             raise HTTPException(status_code=404, detail="User not found")
         return user
     
-    def update_user(self, user_id, updates: dict):
+    def update_user(self, user_id, updates: UserUpdate):
         user = self.user_repo.get_by_id(user_id)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
-        for key in updates.keys():
-            if not hasattr(user, key):
-                raise HTTPException(status_code=400, detail=f"Invalid field: {key}")
+        
+
         return self.user_repo.update(user_id, **updates)
     
     def delete_user(self, user_id):
@@ -36,3 +37,5 @@ class UserService:
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         return self.user_repo.delete(user_id)
+    
+    
