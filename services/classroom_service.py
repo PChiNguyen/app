@@ -5,6 +5,8 @@ from repositories.user_repo import UserRepository
 from repositories.student_repo import StudentRepository 
 from fastapi import HTTPException 
 
+from schemas.classroom import ClassroomUpdate 
+
 from sqlalchemy.orm import Session
 from uuid import UUID 
 
@@ -26,22 +28,28 @@ class ClassroomService:
             raise HTTPException(status_code=404, detail="Classroom not found")
         return classroom
         
-    def update_classroom(self, classroom_id: UUID, updates: dict):
-            # 1. Bouncer Check 1: Does it exist?
-            classroom = self.classroom_repo.get_by_id(classroom_id)
-            if not classroom:
-                raise HTTPException(status_code=404, detail="Classroom not found")
+# app/services/classroom_service.py
+
+    def update_classroom(self, classroom_id: UUID, classroom_in: ClassroomUpdate):
+        # 1. Bouncer Check: Does it exist?
+        classroom = self.classroom_repo.get_by_id(classroom_id)
+        if not classroom:
+            raise HTTPException(status_code=404, detail="Classroom not found")
+            
+        # 2. Safely dump out only what the client actually sent
+        updates = classroom_in.model_dump(exclude_unset=True) 
                 
-            ## let schema do the validation please 
+        # 3. Unpack those clean updates straight to the repo kwargs!
+        return self.classroom_repo.update(classroom_id, **updates)
                     
-            return self.classroom_repo.update(classroom_id, **updates)
+           
     def delete_classroom(self, classroom_id: UUID):
         if not self.classroom_repo.get_by_id(classroom_id):
             raise HTTPException(status_code=404, detail="Classroom not found")
         if self.student_repo.get_by_classroom_id(classroom_id):
             raise HTTPException(status_code=400, detail="Cannot delete classroom with students")
         return self.classroom_repo.delete(classroom_id)
-    def list_classrooms(self, teacher_id: UUID):
+    def list_classrooms_by_teacher_id(self, teacher_id: UUID):
         if not self.user_repo.get_by_id(teacher_id):
             raise HTTPException(status_code=404, detail="Teacher not found")
         return self.classroom_repo.get_by_teacher_id(teacher_id)

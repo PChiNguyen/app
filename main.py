@@ -1,26 +1,38 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-
-# Import your routers
-from api import auth, classrooms, students
-
-from db.base import Base # Or wherever your Base is located
-from db.session import engine # Import the engine you just updated
+# ==========================================
+# 1. DATABASE & MODEL IMPORTS
+# ==========================================
+from db.base import Base
+from db.session import engine
+# We must import all models here so SQLAlchemy registers them before creating the tables!
 from db.models.user import User
 from db.models.classroom import Classroom
 from db.models.student import Student
-from db.models.subject import  Subject
-from db.models.assessment_template import  AssessmentTemplate
+from db.models.subject import Subject
+from db.models.assessment_template import AssessmentTemplate
 from db.models.student_score import StudentScore 
 
+# ==========================================
+# 2. ROUTER IMPORTS
+# ==========================================
+from api import (
+    setup,
+    auth, 
+    classrooms, 
+    students, 
+    assessment_templates, 
+    student_scores, 
+    grading
+)
 
-# This tells SQLAlchemy to look at all your models and build the SQLite file!
+# Initialize database tables (MVP approach)
 Base.metadata.create_all(bind=engine)
 
-
-# from api import students  <-- You will uncomment this when we build it
-
+# ==========================================
+# 3. APP INITIALIZATION
+# ==========================================
 app = FastAPI(
     title="Student Management API",
     description="A professional backend for managing classrooms, students, and GPAs.",
@@ -28,34 +40,38 @@ app = FastAPI(
 )
 
 # ==========================================
-# CORS (Cross-Origin Resource Sharing)
+# 4. CORS CONFIGURATION
 # ==========================================
-# This is crucial for when you hook up your PyQt5 app or a web frontend.
-# It tells your API "Yes, it is safe to talk to these specific external apps."
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, change "*" to your actual frontend URL
+    allow_origins=["*"], # Change to your PyQt5/Web URL in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # ==========================================
-# ROUTER REGISTRATION
+# 5. ROUTER REGISTRATION
 # ==========================================
-# We use 'prefix' so you don't have to type '/api/classrooms' inside the classrooms.py file.
-# We use 'tags' so your Swagger UI groups them into beautiful, organized sections.
+# Grouped logically so your Swagger UI looks incredibly clean
 
+# System & Auth
+app.include_router(setup.router, prefix="/api/setup", tags=["System Setup"])
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
+
+# Core Entities
 app.include_router(classrooms.router, prefix="/api/classrooms", tags=["Classrooms"])
 app.include_router(students.router, prefix="/api/students", tags=["Students"])
 
+# Grading Ecosystem
+app.include_router(assessment_templates.router, prefix="/api/assessment-templates", tags=["Assessment Templates"])
+app.include_router(student_scores.router, prefix="/api/scores", tags=["Student Scores"])
+app.include_router(grading.router, prefix="/api/grading", tags=["Grading & Reports"])
 
-
-
-# app.include_router(students.router, prefix="/api/students", tags=["Students"])
-
-@app.get("/")
+# ==========================================
+# 6. ROOT ENDPOINT
+# ==========================================
+@app.get("/", tags=["Health Check"])
 def root():
-    """Health check endpoint to make sure the server is alive."""
+    """Health check endpoint to ensure the server is alive."""
     return {"message": "API is live! Go to /docs to view the Swagger UI."}

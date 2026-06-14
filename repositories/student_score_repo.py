@@ -34,17 +34,27 @@ class StudentScoreRepository:
         
         # we can not refresh because there are multiple objects 
         return empty_scores
+    
+    def create_score(self, **kwargs):
+        new_score = StudentScore(**kwargs)
+        self.db.add(new_score)
+        self.db.commit()
+        self.db.refresh(new_score)
+        return new_score
 
     # ==========================================
     # 2. THE TEACHER FUNCTION (Used for grading)
     # ==========================================
-    def update_score(self, score_id: UUID, new_score: float):
+    def update_score(self, score_id: UUID,**kwargs):
         db_score = self.db.query(StudentScore).filter(StudentScore.id == score_id).first()
         
-        if db_score:
-            db_score.score = new_score
-            self.db.commit()
-            self.db.refresh(db_score)
+        for key, value in kwargs.items():
+            if hasattr(db_score, key):
+                setattr(db_score, key, value)
+            else:
+                raise AttributeError(f"StudentScore model has no attribute '{key}'")
+        self.db.commit()
+        self.db.refresh(db_score)
             
         return db_score
     
@@ -60,4 +70,12 @@ class StudentScoreRepository:
             StudentScore.student_id == student_id,
             AssessmentTemplate.subject_id == subject_id
         ).all()
+    def delete(self, score_id: UUID) -> bool:
+        """Physically deletes a student's score from the database."""
+        score = self.db.query(StudentScore).filter(StudentScore.id == score_id).first()
+        if score:
+            self.db.delete(score)  
+            self.db.commit()    
+            return True 
+        return False
     

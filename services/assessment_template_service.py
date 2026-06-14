@@ -2,7 +2,7 @@ from repositories.assessment_template_repo import AssessmentTemplateRepository
 from repositories.student_score_repo import StudentScoreRepository
 from repositories.subject_repo import SubjectRepository
 
-from schemas.assessment_template_schemas import AssessmentTemplateCreate, AssessmentTemplateRead, AssessmentTemplateUpdate
+from schemas.assessment_template_schemas import AssessmentTemplateCreate, AssessmentTemplateUpdate
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 

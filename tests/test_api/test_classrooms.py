@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from db.models.classroom import Classroom
 from tests.conftest import MOCK_TEACHER_ID 
 from sqlalchemy.orm import Session
+from db.models.user import User 
 
 
 
@@ -23,9 +24,11 @@ from sqlalchemy.orm import Session
 # THE supposed to be successful tests!
 # ==========================================
 
-def test_create_classroom(client: TestClient, db_session: Session): # Pass db_session to trigger fixtures
+def test_create_classroom(client: TestClient, db_session: Session, mock_teacher: User): # Pass db_session to trigger fixtures
     response = client.post("/api/classrooms/", json={
-        "name": "Math"
+        "name": "Math",
+        "teacher_id": str(mock_teacher.id),
+        
     })
     
     # PRO-TIP: Print the error if it's not 201 so you don't get KeyErrors!

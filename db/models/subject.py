@@ -42,7 +42,7 @@ class Subject(Base):
         CheckConstraint("length(name) >= 2", name='subject_name_min_length'),) 
 
     @validates('name')
-    def validate_name(self, key, input_value: SubName):
+    def validate_name(self, key, input_value: str):
         if isinstance(input_value,SubName):
             return input_value
         if isinstance(input_value,str):

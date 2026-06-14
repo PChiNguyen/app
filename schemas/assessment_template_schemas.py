@@ -41,6 +41,5 @@ class AssessmentTemplateResponse(BaseModel):
     name: str
     type: AssessmentType
     semester: Semester
-    coefficient: Coefficient 
 
     model_config = ConfigDict(from_attributes=True)

@@ -58,6 +58,8 @@ class ReportCardDTO(BaseModel):
     student_name: str
     gpa: float
     class_rank: int
+
+    
     model_config = ConfigDict(from_attributes=True)
 
 

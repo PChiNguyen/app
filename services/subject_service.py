@@ -1,6 +1,7 @@
 from repositories.subject_repo import SubjectRepository
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
+from db.models.subject import Subject, SubName 
 
 
 class SubjectService:
@@ -24,9 +25,10 @@ class SubjectService:
         return subject
     
     def get_subject_by_name(self, name: str):
-        subject = self.subject_repo.get_by_name(name)
-        if not subject:
+        try:
+            name = SubName(name.lower())
+            subject = self.subject_repo.get_by_name(name)
+            return subject 
+        except ValueError:
             raise HTTPException(status_code=404, detail="Subject not found")
-        return subject
-
         

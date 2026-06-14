@@ -27,7 +27,7 @@ class ClassroomBase(BaseModel):
 
 class ClassroomCreate(ClassroomBase):
     teacher_id: UUID = Field(..., description="UUID of the teacher assigned to this classroom")
-class ClassroomUpdate(ClassroomBase):
+class ClassroomUpdate(BaseModel):
     name: Optional[str]= Field(None, min_length=2, max_length=50,description="Update the classroom's name")
     teacher_id: Optional[UUID]= Field(None, description="Move classroom to a different teacher") 
     @field_validator('name')

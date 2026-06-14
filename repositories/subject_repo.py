@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from typing import Optional
-from db.models.subject import Subject
+from db.models.subject import Subject, SubName
 
 class SubjectRepository:
     def __init__(self, db: Session):
