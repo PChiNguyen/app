@@ -7,6 +7,7 @@ import pytest
 from fastapi import HTTPException
 from uuid import uuid4
 from sqlalchemy.orm import Session
+from schemas.student_score_schemas import StudentScoreUpdate 
 
 
 def student_score_service(db_session: Session):
@@ -63,10 +64,11 @@ def test_bulk_create_empty_slots_success(db_session, mock_student: Student, mock
     assert len(slots) == 1
     assert slots[0].score is None  # Defaults to None!
 
-def test_update_score_success(db_session, mock_student_score_semester1):
+def test_update_score_success(db_session, mock_student_score_semester1: StudentScore):
     service = student_score_service(db_session)
     # Teacher grades the paper and updates it to a 10
-    updated_score = service.update_score(mock_student_score_semester1.id, new_score=10.0)
+    update = StudentScoreUpdate(score=10.0)
+    updated_score = service.update_score(mock_student_score_semester1.id, update)
     assert updated_score.score == 10.0
 
 def test_get_scores_by_student_id_success(db_session, mock_student: Student, mock_student_score_semester1):

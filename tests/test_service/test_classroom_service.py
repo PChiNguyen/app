@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 import pytest
 from uuid import uuid4 
+from schemas.classroom import ClassroomUpdate 
 
 def test_create_classroom_with_invalid_teacher_id(db_session: Session):
     service = ClassroomService(db_session)
@@ -52,7 +53,8 @@ def test_get_classroom_success(db_session, mock_classroom: Classroom):
 def test_update_classroom_success(db_session, mock_classroom: Classroom, mock_subject: Subject):
     service = ClassroomService(db_session)
     # Updating the name while leaving the teacher_id intact
-    updated_class: Classroom = service.update_classroom(mock_classroom.id,{"name": "Science"} )
+    update = ClassroomUpdate(name="Science")
+    updated_class: Classroom = service.update_classroom(mock_classroom.id, update)
     assert updated_class.name == "Science"
 
 def test_list_classrooms_by_teacher_id_success(db_session, mock_classroom: Classroom, mock_teacher: User):

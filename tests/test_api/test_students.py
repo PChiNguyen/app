@@ -2,11 +2,13 @@ import pytest
 from fastapi.testclient import TestClient
 import uuid
 from repositories.student_repo import StudentRepository 
+from db.models.classroom import Classroom 
+from db.models.student import Student 
 
 
 
 
-def test_create_student(client: TestClient, db_session, mock_classroom):
+def test_create_student(client: TestClient, db_session, mock_classroom: Classroom):
     response = client.post("/api/students/", json={
         "name": "Thảo Nguyên",
         "classroom_id": str(mock_classroom.id)
@@ -16,7 +18,7 @@ def test_create_student(client: TestClient, db_session, mock_classroom):
     assert response.json()["classroom_id"] == str(mock_classroom.id), f"Failed to create student: {response.json()}" 
 
 
-def test_read_students(client: TestClient, db_session, mock_student):
+def test_read_students(client: TestClient, db_session, mock_student: Student):
     response = client.get("/api/students/")
     assert response.status_code == 200
     assert isinstance(response.json(), list)

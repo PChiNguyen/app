@@ -15,14 +15,14 @@ def create_student(*,
                    current_user = Depends(get_current_teacher),
                    student_in: StudentCreate):
     # Pass the Pydantic box straight down. No unpacking here!
-    return StudentService(db).create_student(student_in)
+    return StudentService(db).create_student(student_in.name, student_in.classroom_id)
 
 @router.get('/', response_model=List[StudentRead])
 def read_students(*, 
                   skip: int = 0, limit: int = 100,
                   db: Session = Depends(get_db),
                   current_user = Depends(get_current_teacher)):
-    return StudentService(db).list_students(skip=skip, limit=limit) 
+    return StudentService(db).get_multi_students(skip=skip, limit=limit) 
 
 @router.get('/{student_id}', response_model=StudentRead)
 def read_student(*, 
@@ -30,7 +30,7 @@ def read_student(*,
                  db: Session = Depends(get_db),
                  current_user = Depends(get_current_teacher)):
     # The service raises the 404 error if missing. We just return!
-    return StudentService(db).get_student(student_id)
+    return StudentService(db).get_student_by_id(student_id)
 
 @router.put('/{student_id}', response_model=StudentRead)
 def update_student(*, 

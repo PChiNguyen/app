@@ -15,7 +15,7 @@ router= APIRouter()
 @router.post('/', response_model= ClassroomRead, status_code= status.HTTP_201_CREATED)
 def create_classroom(*,
                      db: Session = Depends(get_db),
-                     current_user= Depends(get_current_teacher),
+                     current_user: User= Depends(get_current_teacher),
                      classroom_in: ClassroomCreate):
 ## the '*' ensures that all parameters after it must be passed as keyword arguments, not positional arguments. This is a common practice in FastAPI to improve code readability and prevent errors when calling the function.
     service: ClassroomService = ClassroomService(db)    
