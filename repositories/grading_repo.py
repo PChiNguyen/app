@@ -8,6 +8,7 @@ from db.models.student_score import Status
 
 from db.models.assessment_template import AssessmentTemplate
 from db.models.student_score import StudentScore
+from sqlalchemy import case, func, cast, Numeric 
 
                                 ## messi 
 
@@ -63,9 +64,9 @@ class GradingRepository:
 
         # 2. THE SMART STICKY NOTE (Now using the Cheat Sheet!)
         valid_sub_avg_calc = case(
-            # We JUST TAKE the number straight from the cheat sheet column!
             (func.count(StudentScore.id) == syllabus_counts.c.total_required, 
-             func.round(func.sum(StudentScore.score * AssessmentTemplate.coefficient) / func.sum(AssessmentTemplate.coefficient), 2)),
+             # 🛠️ CAST ADDED HERE
+             func.round(cast(func.sum(StudentScore.score * AssessmentTemplate.coefficient) / func.sum(AssessmentTemplate.coefficient), Numeric), 2)),
             else_=None
         )
 

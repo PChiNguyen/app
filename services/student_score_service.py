@@ -50,13 +50,17 @@ class StudentScoreService:
         student = self.student_repo.get_by_id(score_in.student_id)
         if not student:
             raise HTTPException(status_code=404, detail="Student not found")
+            
         # 2. BOUNCER: Check if the template exists
         template = self.template_repo.get_by_id(score_in.assessment_template_id)
         if not template:
             raise HTTPException(status_code=404, detail="Assessment template not found")
         
-        # 3. ALL CHECKS PASSED: Now we can safely create the score!
-        return self.score_repo.create_score(score_in)
+        # 3. TRANSFORM: Convert the Pydantic object into a dictionary!
+        score_data = score_in.model_dump()
+        
+        # 4. ALL CHECKS PASSED: Safely unpack the dictionary and create the score!
+        return self.score_repo.create_score(**score_data)
 
     def update_score(self, score_id: UUID, score_in: StudentScoreUpdate):
         # 1. BOUNCER: Check if the score slot exists

@@ -4,6 +4,9 @@ from repositories.user_repo import UserRepository
 from db.models.user import User
 from db.models.classroom import Classroom
 from db.models.student import Student
+from db.models.subject import Subject 
+from db.models.assessment_template import AssessmentTemplate
+from db.models.student_score import StudentScore 
 
 
 # If you don't have a get_password_hash function yet, just use a raw string for now

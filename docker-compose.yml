@@ -1,0 +1,50 @@
+services:
+  # 1. Your THPT AN PHUOC FastAPI Backend
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - db
+      - redis
+
+  # 2. The PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: an_phuoc_db
+    ports:
+      - "5432:5432"
+    # THE FIX: Permanent memory card for your database
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  redis:
+      image: redis:7-alpine
+      ports:
+        - "6379:6379"
+
+  # 3. The pgAdmin4 Visual Interface
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+    # THE FIX: Permanent memory card for pgAdmin
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+# 4. Declare the physical memory cards to Docker
+volumes:
+  postgres_data:
+  pgadmin_data:

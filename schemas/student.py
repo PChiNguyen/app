@@ -56,8 +56,8 @@ class StudentRead(StudentBase):
 class ReportCardDTO(BaseModel):
     student_id: UUID
     student_name: str
-    gpa: float
-    class_rank: int
+    gpa: Optional[float] = None
+    class_rank: Optional[int]= None 
 
     
     model_config = ConfigDict(from_attributes=True)
