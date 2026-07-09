@@ -1,31 +1,24 @@
 name: CI Pipeline
 
-# 1. When should this robot run?
 on:
   push:
-    branches:
-      - main
+    branches: [ "main", "testing-api" ]
   pull_request:
-    branches:
-      - main
+    branches: [ "main", "testing-api" ]
 
-# 2. What jobs should it do?
 jobs:
-  test-and-build:
-    name: Run Tests and Build Docker
+  test:
     runs-on: ubuntu-latest
 
-    # 3. Spin up temporary databases for testing
     services:
       postgres:
         image: postgres:15-alpine
         env:
           POSTGRES_USER: test_user
-          POSTGRES_PASSWORD: test_password
-          POSTGRES_DB: test_school_db
+          POSTGRES_PASSWORD: test_pass
+          POSTGRES_DB: test_db
         ports:
           - 5432:5432
-        # Wait for postgres to be ready before moving on
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -36,33 +29,34 @@ jobs:
         image: redis:alpine
         ports:
           - 6379:6379
+        # Copilot's fix: Ensures Redis is fully awake before tests start!
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
-    # 4. The actual step-by-step instructions
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: "pip" # Makes subsequent runs faster by caching dependencies!
+          cache: "pip"
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run Pytest
-        # We inject the environment variables here so your code connects to the GitHub Action databases
+      # ➡️ THIS IS EXACTLY WHERE IT GOES ⬅️
+      - name: Run Tests
         env:
-          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_school_db
-          REDIS_URL: redis://localhost:6379/0
-        run: |
-          # If you have a make command like 'make test', you can replace the line below with it!
-          pytest -v 
+          TESTING: "True"
+          SQLALCHEMY_DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/test_db
+          REDIS_URL: redis://localhost:6379/0  # This forces your app to use localhost instead of 'redis'
+        run: make test
 
-      - name: Test Docker Build (Sanity Check)
-        # We just build the image to ensure your Dockerfile isn't broken. We don't push it anywhere yet.
+      - name: Docker Build Check
         run: docker build -t student-system-api .
-        
