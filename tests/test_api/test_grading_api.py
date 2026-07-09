@@ -18,7 +18,7 @@ class TestGradingEmptyState:
         response = client.get(f"/api/grading/classrooms/{str(mock_classroom.id)}/semesters/1/subject-averages")
         assert response.status_code == 404
         assert "No grades found" in response.json()["detail"]
-
+    @pytest.mark.redis
     def test_empty_student_semester_gpa_returns_404(self, client: TestClient, mock_classroom: Classroom, mock_student: Student):
         response = client.get(f"/api/grading/classrooms/{str(mock_classroom.id)}/students/{str(mock_student.id)}/semesters/1/gpa")
         assert response.status_code == 404
@@ -29,7 +29,7 @@ class TestGradingEmptyState:
 # Seeding the database to prove the Math works!
 # ==========================================
 class TestGradingPopulatedState:
-
+    @pytest.mark.redis
     def test_populated_student_semester_gpa_success(self, client: TestClient, db_session: Session, mock_classroom: Classroom, mock_student: Student, mock_assessment_template_semester1: AssessmentTemplate):
         
         # 1. ACTIVATE THE DB: We must manually insert a score so the Repo has data!
