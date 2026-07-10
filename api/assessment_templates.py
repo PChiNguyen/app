@@ -40,7 +40,7 @@ def delete_template(*, template_id: int,
                      current_user: User= Depends(get_current_teacher)):
     service = AssessmentTemplateService(db)
     service.delete_template(template_id)
-    return
+    return None
 
 
 

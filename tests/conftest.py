@@ -129,14 +129,23 @@ def client(db_session):
 
 @pytest.fixture(scope='session')    
 def engine():
-    _engine = create_engine(settings.SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+    # Conditionally add connect_args based on database type
+    connect_args = {}
+    if "sqlite" in settings.SQLALCHEMY_DATABASE_URL.lower():
+        connect_args = {"check_same_thread": False}
+    
+    _engine = create_engine(settings.SQLALCHEMY_DATABASE_URL, connect_args=connect_args)
     
     # 1. Register the listener (DO NOT put yield here)
     @event.listens_for(_engine, "connect")
     def set_sqlite_pragma(dbapi_connection, connection_record):
-        cursor = dbapi_connection.cursor()
-        cursor.execute("PRAGMA foreign_keys=ON")
-        cursor.close()
+        # Only execute PRAGMA for SQLite
+        if "sqlite" in settings.SQLALCHEMY_DATABASE_URL.lower():
+            cursor = dbapi_connection.cursor()
+            cursor.execute("PRAGMA foreign_keys=ON")
+            cursor.close()
+
+
 
     # 2. Import models so Base can see them
     from db.models.user import User

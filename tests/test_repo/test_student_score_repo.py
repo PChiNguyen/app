@@ -4,6 +4,7 @@ from db.models.student_score import StudentScore
 from repositories.student_score_repo import StudentScoreRepository  
 from db.models.assessment_template import AssessmentTemplate
 from sqlalchemy.orm import Session  
+from schemas.student_score_schemas import StudentScoreUpdate 
 
 @pytest.fixture
 def mock_students(db_session: Session) -> list[Student]:
@@ -30,12 +31,13 @@ def test_bulk_create_empty_slots(db_session, mock_assessment_template_semester1:
 
 def test_update_score(db_session, mock_student_score_semester1: StudentScore):
     repo = StudentScoreRepository(db_session)
-    new_score = 9.0
-    updated_score = repo.update_score(mock_student_score_semester1.id, new_score)
+    update = StudentScoreUpdate(score=10).model_dump(exclude_unset=True)
+    
+    updated_score = repo.update_score(mock_student_score_semester1.id,**update)
     
     assert updated_score is not None
     assert updated_score.id == mock_student_score_semester1.id
-    assert updated_score.score == new_score
+    assert updated_score.score == 10
 
 def test_get_by_id(db_session, mock_student_score_semester1: StudentScore):
     repo = StudentScoreRepository(db_session)

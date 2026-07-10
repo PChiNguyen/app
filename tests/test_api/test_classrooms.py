@@ -4,7 +4,6 @@ from fastapi.testclient import TestClient
 
 
 from db.models.classroom import Classroom
-from tests.conftest import MOCK_TEACHER_ID 
 from sqlalchemy.orm import Session
 from db.models.user import User 
 

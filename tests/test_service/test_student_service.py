@@ -5,7 +5,8 @@ import pytest
 from fastapi import HTTPException
 from uuid import uuid4
 from sqlalchemy.orm import Session 
-from tests.conftest import db_session 
+from tests.conftest import db_session
+from schemas.student import StudentUpdate  
 
 def student_service(db_session: Session):
     return StudentService(db_session)
@@ -70,7 +71,8 @@ def test_get_student_by_id_success(db_session, mock_student: Student):
 def test_update_student_success(db_session, mock_student: Student):
     service = student_service(db_session)
     # Updating just the name
-    updated = service.update_student(mock_student.id, {"name": "Nguyễn Văn A"})
+    update = StudentUpdate(name="Nguyễn Văn A")
+    updated = service.update_student(mock_student.id, update)
     assert updated.name == "Nguyễn Văn A"
 
 def test_delete_student_success(db_session, mock_classroom: Classroom):

@@ -66,10 +66,7 @@ class User(Base):
             
             # Check đơn giản để SQLite không nổ lỗi:
             CheckConstraint("length(username) >= 4", name='username_min_length'),
-            CheckConstraint(
-            "(role = 'teacher' AND subject_id IS NOT NULL) OR (role != 'teacher' AND subject_id IS NULL)",
-            name="enforce_teacher_subject_rule"
-        ),
+      
     
         )
     @validates('username')
