@@ -1,60 +1,73 @@
+# The official name of this automation script displayed on GitHub's interface
 name: CI Pipeline
 
+# -----------------------------------------------------------------------------
+# 1. THE TRIPWIRE: When should this script execute?
+# -----------------------------------------------------------------------------
 on:
   push:
-    branches: [ "main", "testing-api" ]
+    branches: [ "main", "testing-api" ]         # Run automatically when code is pushed to these branches
   pull_request:
-    branches: [ "main", "testing-api" ]
+    branches: [ "main", "testing-api" ]         # Run automatically when a Pull Request is opened against them
 
+# -----------------------------------------------------------------------------
+# 2. THE WORKHOUSE: What tasks must be executed?
+# -----------------------------------------------------------------------------
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest                       # Rent a clean Linux machine from GitHub to execute steps
 
+    # -------------------------------------------------------------------------
+    # 3. TEMPORARY DATABASES: Infrastructure built strictly for this test run
+    # -------------------------------------------------------------------------
     services:
       postgres:
-        image: postgres:15-alpine
+        image: postgres:15-alpine                # Fetch a lightweight, pre-configured Postgres image
         env:
-          POSTGRES_USER: test_user
-          POSTGRES_PASSWORD: test_pass
-          POSTGRES_DB: test_db
+          POSTGRES_USER: test_user               # Admin username for the testing database
+          POSTGRES_PASSWORD: test_pass           # Admin password for the testing database
+          POSTGRES_DB: test_db                   # Name of the temporary sandbox database
         ports:
-          - 5432:5432
-        options: >-
+          - 5432:5432                            # Expose Postgres port inside the GitHub network environment
+        options: >-                              # HEALTH INSURANCE: Ensure database is fully online before moving on
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
 
       redis:
-        image: redis:alpine
+        image: redis:alpine                      # Fetch a lightweight, pre-configured Redis caching image
         ports:
-          - 6379:6379
-        options: >-
+          - 6379:6379                            # Expose Redis port inside the GitHub network environment
+        options: >-                              # HEALTH INSURANCE: Ping Redis to verify availability before testing
           --health-cmd "redis-cli ping"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
 
+    # -------------------------------------------------------------------------
+    # 4. STEP-BY-STEP CHECKLIST: Instructions executed sequentially
+    # -------------------------------------------------------------------------
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4                # Step 1: Clone your code repo into this clean virtual machine
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v5            # Step 2: Provision the environment with Python 3.12
         with:
           python-version: "3.12"
-          cache: "pip"
+          cache: "pip"                           # Save downloaded packages to make subsequent test runs faster!
 
       - name: Install dependencies
-        run: |
+        run: |                                   # Step 3: Upgrade pip and install all software dependencies
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install httpx  # Adding this to fix that Starlette TestClient error!
+          pip install httpx                      # CRITICAL FIX: Explicitly install httpx needed by Starlette TestClient!
 
       - name: Run Tests
         env:
-          TESTING: "True"
-        # Copilot's Step 5: Run tests but skip anything marked with @pytest.mark.redis
+          TESTING: "True"                        # Step 4: Signal your app config logic that it's running in testing mode
+        # EXECUTION: Run pytest aggressively, but bypass any test suites explicitly tagged with the '@pytest.mark.redis' marker
         run: pytest -v -m "not redis"
 
       - name: Docker Build Check
-        run: docker build -t student-system-api .
+        run: docker build -t student-system-api . # Step 5: Sanity check ensuring your local Dockerfile parses and builds flawlessly

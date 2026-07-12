@@ -8,6 +8,7 @@ import pytest
 from sqlalchemy.exc import IntegrityError 
 from sqlalchemy import text 
 from db.models.user import User, UserRole  
+from sqlalchemy.orm import Session
 
 
 def test_validate_username_too_short():
@@ -34,7 +35,7 @@ def test_validate_role_enum():
 
 
 ## check ở database
-def test_db_unique_username_constraint(db_session): 
+def test_db_unique_username_constraint(db_session: Session): 
     user1= User(username= "unique_user", email="unique1@abc.com", password_hash="abc")
     db_session.add(user1)
     db_session.commit()
@@ -46,7 +47,7 @@ def test_db_unique_username_constraint(db_session):
 
     db_session.rollback() 
 
-def test_db_check_constraint_hacker(db_session):
+def test_db_check_constraint_hacker(db_session: Session):
     """Test dùng SQL thuần (Bind Parameters) để giả lập lách luật""" 
     sql=text("""
         INSERT INTO users (id, username, email, password_hash, role) 
@@ -57,7 +58,7 @@ def test_db_check_constraint_hacker(db_session):
         "u": "h", 
         "e": "hacker@abc", 
         "p": "abc", 
-        "r": "student"  
+        "r": "STUDENT"  
     }
     with pytest.raises(IntegrityError):
         db_session.execute(sql, data)
@@ -65,8 +66,8 @@ def test_db_check_constraint_hacker(db_session):
 
     db_session.rollback()     
 
-def test_vui(db_session):
-    user = User(username="validuser", email="thaonguyen@gmail.com", password_hash="abc", role="student")
+def test_vui(db_session: Session):
+    user = User(username="validuser", email="thaonguyen@gmail.com", password_hash="abc", role="STUDENT")
     print(str(user.id))
 
         
