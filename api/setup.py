@@ -10,7 +10,7 @@ router= APIRouter()
 @router.post("/system/init-subjects", tags=["System Setup"])
 def initialize_school_subjects(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin) # 🚨 STRICT BOUNCER!
+    # current_user: User = Depends(get_current_admin) <-- Bye bye bouncer!
 ):
     subject_repo = SubjectRepository(db)
     subjects_to_initialize = ["Mathematics", "Science", "History", "Literature", "Art", "Physical Education", "Computer Science"]

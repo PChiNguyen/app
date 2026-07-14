@@ -1,50 +1,59 @@
+# The master blueprint version
+version: '3.8'
+
+# ---------------------------------------------------
+# THE RESTAURANT DEPARTMENTS (COMPUTERS)
+# ---------------------------------------------------
 services:
-  # 1. Your THPT AN PHUOC FastAPI Backend
+
+  # 1. The Chef (Your Python Code)
   api:
-    build: .
+    build: .                           # Use the Dockerfile in this folder to train the chef
     ports:
-      - "8000:8000"
+      - "8000:8000"                    # Drive-Thru Window: Connect host port 8000 to internal port 8000
     env_file:
-      - .env
+      - .env                           # Give the chef the secret recipes (passwords/keys)
     environment:
-      - PYTHONUNBUFFERED=1
+      - PYTHONUNBUFFERED=1             # Tell the chef to shout out errors instantly (don't hide logs)
     depends_on:
-      - db
+      - db                             # Don't let the chef start until the clerk and bartender are ready
       - redis
 
-  # 2. The PostgreSQL Database
+  # 2. The Filing Clerk (The Database)
   db:
-    image: postgres:15-alpine
-    restart: always
+    image: postgres:15-alpine          # Hire a pre-trained Postgres professional (alpine = lightweight)
+    restart: always                    # If the clerk passes out, wake them up immediately
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: root
-      POSTGRES_DB: an_phuoc_db
+      POSTGRES_USER: postgres          # Hardcoded username
+      POSTGRES_PASSWORD: root          # Hardcoded password
+      POSTGRES_DB: an_phuoc_db         # The name of the main filing cabinet
     ports:
-      - "5432:5432"
-    # THE FIX: Permanent memory card for your database
+      - "5432:5432"                    # Drive-Thru Window for the database
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-  redis:
-      image: redis:7-alpine
-      ports:
-        - "6379:6379"
+      - postgres_data:/var/lib/postgresql/data  # Save all files to the indestructible safe!
 
-  # 3. The pgAdmin4 Visual Interface
+  # 3. The Speedy Bartender (The Cache)
+  redis:
+    image: redis:7-alpine              # Hire a pre-trained Redis professional
+    ports:
+      - "6379:6379"                    # Drive-Thru Window for the cache
+
+  # 4. The Security Camera Room (Database UI)
   pgadmin:
-    image: dpage/pgadmin4
+    image: dpage/pgadmin4              # Hire a pre-trained pgAdmin web viewer
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: root
     ports:
-      - "5050:80"
+      - "5050:80"                      # Drive-Thru Window: Map laptop port 5050 to internal port 80
     depends_on:
-      - db
-    # THE FIX: Permanent memory card for pgAdmin
+      - db                             # Cameras can't turn on if the database isn't running
     volumes:
-      - pgadmin_data:/var/lib/pgadmin
+      - pgadmin_data:/var/lib/pgadmin  # Save your saved passwords/layouts to a safe
 
-# 4. Declare the physical memory cards to Docker
+# ---------------------------------------------------
+# BUY THE INDESTRUCTIBLE SAFES
+# ---------------------------------------------------
 volumes:
-  postgres_data:
-  pgadmin_data:
+  postgres_data:                       # Tell Docker to officially manufacture the database safe
+  pgadmin_data:                        # Tell Docker to officially manufacture the UI safe

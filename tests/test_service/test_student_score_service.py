@@ -41,7 +41,7 @@ def test_get_student_score_by_student_id_not_found(db_session):
 def test_get_scores_by_template_id_not_found(db_session):
     service = student_score_service(db_session)
     with pytest.raises(HTTPException) as exc_info:
-        service.get_scores_by_template_id(uuid4())
+        service.get_scores_by_template_id(1)
     assert exc_info.value.status_code == 404
 
 def test_get_scores_by_student_id_and_subject_id_not_found(db_session):

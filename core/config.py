@@ -1,6 +1,6 @@
 from typing import List
 import os 
-from pydantic import AnyHttpUrl
+from pydantic import AnyHttpUrl, Field, AliasChoices
 from pydantic_settings import BaseSettings, SettingsConfigDict 
 
 ## Config is considered as a 'midfielder' between pydantic and environment variables, files and database
@@ -20,9 +20,12 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7 #  a week
 
     # 3. Database
-    # Defaulting to SQLite for easy local development
-    SQLALCHEMY_DATABASE_URL: str = "sqlite:///./sql_app.db"   
-
+    # This smart Field prioritizes local SQLALCHEMY_DATABASE_URL, 
+    # falls back to Render's default DATABASE_URL, and defaults to SQLite.
+    SQLALCHEMY_DATABASE_URL: str = Field(
+        default="sqlite:///./sql_app.db",
+        validation_alias=AliasChoices("SQLALCHEMY_DATABASE_URL", "DATABASE_URL")
+    )   
 
     # 4. CORS (Cross-Origin Resource Sharing)
     # This allows your Frontend (like a React or PyQt5 app) to talk to the API
@@ -30,18 +33,11 @@ class Settings(BaseSettings):
 
     # 5. The "Magic" Link to the .env file
     # This tells Pydantic to look for a file named '.env' in your root folder
+    model_config = SettingsConfigDict(
+        env_file=".env.test" if os.getenv("TESTING") else ".env",
+        env_file_encoding='utf-8',
+        case_sensitive=True,
+        extra='ignore'
+    )
 
-    model_config= SettingsConfigDict(env_file=".env.test" if os.getenv("TESTING") else ".env",
-                                     env_file_encoding='utf-8',
-                                     case_sensitive= True,
-                                     extra ='ignore')
-
-settings= Settings()
-
-
-
-
-
-
-
-
+settings = Settings()
