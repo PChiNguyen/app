@@ -6,7 +6,7 @@ name: CI Pipeline
 # -----------------------------------------------------------------------------
 on:
   push:
-    branches: [ "**"]         # Run automatically when code is pushed to these branches
+    branches: [ "**"]         # Run moi moi automatically when code is pushed to these branches
   pull_request:
     branches: [ "main" ]         # Run automatically when a Pull Request is opened against them
 
