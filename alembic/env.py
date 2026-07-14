@@ -41,6 +41,9 @@ from db.base import Base
 from db.models.user import User
 from db.models.classroom import Classroom
 from db.models.student import Student
+from db.models.subject import Subject
+from db.models.assessment_template import AssessmentTemplate
+from db.models.student_score import StudentScore
 
 # Hand the "Eyes" over to Alembic so it knows what to build
 target_metadata = Base.metadata
