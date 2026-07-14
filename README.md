@@ -1,5 +1,6 @@
 Markdown
-# 🎓 Nguyễn Võ Thảo Nguyên ơi tui thích bà
+# Student grading system
+
 
 A professional, high-performance RESTful API designed to manage classrooms, students, and complex grading systems. Built with modern Python backend architecture.
 
