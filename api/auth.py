@@ -11,10 +11,28 @@ from core.config import settings
 from repositories.user_repo import UserRepository
 from schemas.auth import Token
 from schemas.user_schemas import UserRead 
-
+from sqlalchemy import text
 router= APIRouter() 
 
 
+
+
+@router.get("/api/auth/debug-neon-connection")
+def debug_neon_connection(db: Session = Depends(get_db)):
+    try:
+        # 1. Get the exact database name the live server is using
+        current_db = db.execute(text("SELECT current_database();")).scalar()
+        
+        # 2. Count the actual users sitting in the live table
+        user_count = db.execute(text("SELECT COUNT(*) FROM users;")).scalar()
+        
+        return {
+            "database_name": current_db,
+            "total_users_in_database": user_count,
+            "message": "Connection is active!"
+        }
+    except Exception as e:
+        return {"error": str(e), "message": "Database connection failed completely!"}
 @router.post('/login', response_model= Token)
 ## this response_model ensures that the response from this endpoint will be in the format of the Token schema defined in schemas/auth.py
 def login_access_token(

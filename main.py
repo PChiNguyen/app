@@ -76,3 +76,21 @@ app.include_router(grading.router, prefix="/api/grading", tags=["Grading & Repor
 def root():
     """Health check endpoint to ensure the server is alive."""
     return {"message": "API is live! Go to /docs to view the Swagger UI."}
+
+from fastapi import FastAPI
+from datetime import datetime
+
+app = FastAPI() # Use your existing FastAPI app instance
+
+@app.get("/health", tags=["System Health"])
+def health_check():
+    """
+    Lightweight endpoint to confirm the API is live, 
+    running the correct version, and fully operational.
+    """
+    return {
+        "status": "operational",
+        "environment": "production",
+        "version": "1.0.1",  # Bump this number whenever you merge new changes
+        "timestamp": datetime.utcnow().isoformat()
+    }
