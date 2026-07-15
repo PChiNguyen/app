@@ -15,8 +15,7 @@ def test_login_success(client: TestClient, db_session: Session):
     user = user_repo.create(
         username="testuser",
         email="test@example.com",
-        password="correct_password",
-        role="student"
+        password="correct_password"
     )   
     
     
