@@ -39,7 +39,7 @@ def test_login_success(client: TestClient, db_session: Session):
 def test_login_wrong_password(client: TestClient):
     """Test that wrong password returns 401"""
     login_data = {
-        "username": "test@example.com",
+        "username": "test@example.com",##
         "password": "wrong_password"
     }
     response = client.post("/api/auth/login", data=login_data)
