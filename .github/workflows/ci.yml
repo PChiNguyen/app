@@ -8,7 +8,7 @@ on:
   push:
     branches: [ "**"]         # Run moi moi moi automatically when code is pushed to these branches
   pull_request:
-    branches: [ "main" , "render-neon-update"]         # Run automatically when a Pull Request is opened against them
+    branches: [ "main" ]         # Run automatically when a Pull Request is opened against them
 
 # -----------------------------------------------------------------------------
 # 2. THE WORKHOUSE: What tasks must be executed?
