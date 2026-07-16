@@ -88,4 +88,4 @@ def health_check():
         "environment": "production",
         "version": "1.0.1",  # Bump this number whenever you merge new changes
         "timestamp": datetime.now(timezone.utc).isoformat()
-    }
+    }     
