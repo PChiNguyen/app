@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from datetime import datetime, timezone 
 
 # ==========================================
 # 1. DATABASE & MODEL IMPORTS
@@ -13,9 +14,6 @@ from db.models.student import Student
 from db.models.subject import Subject
 from db.models.assessment_template import AssessmentTemplate
 from db.models.student_score import StudentScore 
-from fastapi import FastAPI
-from datetime import datetime
-
 
 # ==========================================
 # 2. ROUTER IMPORTS
@@ -34,7 +32,7 @@ from api import (
 Base.metadata.create_all(bind=engine)
 
 # ==========================================
-# 3. APP INITIALIZATION
+# 3. APP INITIALIZATION (ONLY ONCE!)
 # ==========================================
 app = FastAPI(
     title="Student Management API",
@@ -72,17 +70,12 @@ app.include_router(student_scores.router, prefix="/api/scores", tags=["Student S
 app.include_router(grading.router, prefix="/api/grading", tags=["Grading & Reports"])
 
 # ==========================================
-# 6. ROOT ENDPOINT
+# 6. SYSTEM ENDPOINTS
 # ==========================================
 @app.get("/", tags=["Health Check"])
 def root():
     """Health check endpoint to ensure the server is alive."""
     return {"message": "API is live! Go to /docs to view the Swagger UI."}
-
-from fastapi import FastAPI
-from datetime import datetime
-
-
 
 @app.get("/health", tags=["System Health"])
 def health_check():
@@ -94,5 +87,5 @@ def health_check():
         "status": "operational",
         "environment": "production",
         "version": "1.0.1",  # Bump this number whenever you merge new changes
-        "timestamp": datetime.utcnow().isoformat()
-    }
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }     
