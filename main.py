@@ -13,6 +13,8 @@ from db.models.student import Student
 from db.models.subject import Subject
 from db.models.assessment_template import AssessmentTemplate
 from db.models.student_score import StudentScore 
+from fastapi import FastAPI
+from datetime import datetime
 
 
 # ==========================================
@@ -80,7 +82,7 @@ def root():
 from fastapi import FastAPI
 from datetime import datetime
 
-app = FastAPI() # Use your existing FastAPI app instance
+
 
 @app.get("/health", tags=["System Health"])
 def health_check():

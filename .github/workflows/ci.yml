@@ -66,6 +66,10 @@ jobs:
       - name: Set Database Environment Variables
         run: |
           echo "DATABASE_URL=postgresql://test_user:test_pass@localhost:5432/test_db" >> $GITHUB_ENV
-
+      - name: Run Tests
+        env:
+          TESTING: "True"                        # Step 4: Signal your app config logic that it's running in testing mode
+        # EXECUTION: Run pytest aggressively, but bypass any test suites explicitly tagged with the '@pytest.mark.redis' marker
+        run: pytest -v -m "not redis"
       - name: Docker Build Check
         run: docker build -t student-system-api . # Step 5: Sanity check ensuring your local Dockerfile parses and builds flawlessly
