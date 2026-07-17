@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timezone 
+import traceback
+from fastapi import Request
+from fastapi.responses import JSONResponse  
 
 # ==========================================
 # 1. DATABASE & MODEL IMPORTS
@@ -89,3 +92,34 @@ def health_check():
         "version": "1.0.1",  # Bump this number whenever you merge new changes
         "timestamp": datetime.now(timezone.utc).isoformat()
     }     
+
+# ==========================================
+# EXTRA: SWAGGER 500 ERROR INVESTIGATOR
+# ==========================================
+@app.exception_handler(Exception)
+async def global_crash_catcher(request: Request, exc: Exception):
+    """
+    Catches any runtime crash, extracts the exact line number, 
+    and sends the full traceback report straight to your Swagger UI screen.
+    """
+    # Convert the scary system crash report into clean, readable text lines
+    full_traceback = "".join(
+        traceback.format_exception(type(exc), exc, exc.__traceback__)
+    )
+    
+    # 1. Print it to Render's terminal stream just in case
+    print(f"\n[CRASH REPORT] 500 Error on {request.method} {request.url.path}")
+    print(full_traceback)
+    
+    # 2. Package it nicely and send it directly back to your browser screen!
+    return JSONResponse(
+        status_code=500,
+        content={
+            "status": "fail",
+            "error_class": type(exc).__name__,
+            "reason": str(exc),
+            "endpoint": request.url.path,
+            "fix_instruction": "Look at the traceback array below to find the exact file and line number that failed.",
+            "traceback": full_traceback.split("\n")  # Splits text into a clean readable list
+        }
+    )
