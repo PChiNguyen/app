@@ -6,6 +6,7 @@ from api.deps import get_db, get_current_teacher , get_current_user
 from db.models.user import User 
 from services.student_score_service import StudentScoreService 
 import redis  
+import os 
 
 from schemas.student_score_schemas import StudentScoreUpdate, StudentScoreResponse, StudentScoreCreate
 
@@ -46,8 +47,15 @@ def read_scores_by_student_id_and_subject_id(*, student_id: UUID, subject_id: in
 
 
 
-# Connect to the Redis container
-redis_client = redis.Redis(host='redis', port=6379, db=0, decode_responses=True)
+# =============================================================================
+# 🔌 DYNAMIC REDIS CONNECTION (Works on GitHub & Render)
+# =============================================================================
+# 1. Look for Render's environment variable. 
+# 2. If missing, fall back to 'redis://redis:6379' which matches your GitHub ci.yml!
+REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379")
+
+# Initialize the client using the complete URL string
+redis_client = redis.from_url(REDIS_URL, decode_responses=True)
 
 # ... (keep your other routes the same) ...
 
