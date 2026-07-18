@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import traceback
 from fastapi import Request
 from fastapi.responses import JSONResponse  
+from fastapi import APIRouter
 
 # ==========================================
 # 1. DATABASE & MODEL IMPORTS
@@ -123,3 +124,35 @@ async def global_crash_catcher(request: Request, exc: Exception):
             "traceback": full_traceback.split("\n")  # Splits text into a clean readable list
         }
     )
+
+@app.get("/api/auth/debug-env-vars", tags=["System Health"])
+def debug_environment_variables():
+    """
+    Safely inspects if Render has injected the REDIS_URL 
+    variable into our live app environment.
+    """
+    raw_redis_url = os.getenv("REDIS_URL")
+    
+    if not raw_redis_url:
+        return {
+            "REDIS_URL_STATUS": "❌ NOT FOUND! Your app is blind to it.",
+            "current_fallback_being_used": "redis://redis:6379",
+            "action_item": "Go to Render Dashboard -> Environment -> Add REDIS_URL"
+        }
+        
+    # Safely mask the password so your secrets stay private
+    # Example: redis://:password@host -> redis://:****@host
+    masked_url = raw_redis_url
+    if "@" in raw_redis_url:
+        try:
+            prefix, credentials_host = raw_redis_url.split("://")
+            credentials, host = credentials_host.split("@")
+            masked_url = f"{prefix}://:****@{host}"
+        except Exception:
+            masked_url = "redis://[Masked Connection String]"
+
+    return {
+        "REDIS_URL_STATUS": "✅ FOUND!",
+        "detected_value": masked_url,
+        "is_using_fallback": False
+    }
