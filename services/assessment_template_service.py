@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 
 class AssessmentTemplateService:
-    def __init__(self, db: Session):
+    def __init__(self, db: Session): 
         self.template_repo = AssessmentTemplateRepository(db)
         self.score_repo = StudentScoreRepository(db)
         self.subject_repo = SubjectRepository(db)

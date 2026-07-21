@@ -44,13 +44,17 @@ app = FastAPI(
     description="A professional backend for managing classrooms, students, and GPAs.",
     version="1.0.0"
 )
-
+ALLOWED_PRODUCTION_ORIGINS = [
+    "https://anphuoc-school.com",          # Your future web frontend
+    "https://admin-dashboard.netlify.app", # Your admin panel web deployment
+    "http://localhost:3000",               # Local frontend development environment
+]
 # ==========================================
 # 4. CORS CONFIGURATION
 # ==========================================
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Change to your PyQt5/Web URL in production
+    allow_origins=ALLOWED_PRODUCTION_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

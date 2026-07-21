@@ -79,16 +79,16 @@ def get_student_semester_gpa(*, classroom_id: UUID, student_id: UUID, semester: 
     # 2. Add a tally mark to their name (incr automatically creates the key if it doesn't exist)
     request_count = redis_client.incr(rate_limit_key)
     
-    # 3. If this is their first tally mark, tell Redis to burn the clipboard after 60 seconds
+    # 3. If this is their first tally mark, tell Redis to burn the clipboard after 30 seconds
     if request_count == 1:
-        redis_client.expire(rate_limit_key, 60)
+        redis_client.expire(rate_limit_key, 30)
         
     # 4. If they have more than 5 tally marks, block them!
     if request_count > 5:
         print(f"🛑 RATE LIMIT TRIGGERED FOR USER {current_user.id}!", flush=True)
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Bro, slow down! You are spamming the server. Try again in 60 seconds."
+            detail="Bro, slow down! You are spamming the server. Try again in 30 seconds."
         )
     # ==========================================
 
