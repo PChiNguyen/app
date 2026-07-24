@@ -6,6 +6,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse  
 from fastapi import APIRouter
 import os 
+from core.exceptions import AppException
 
 # ==========================================
 # 1. DATABASE & MODEL IMPORTS
@@ -50,7 +51,7 @@ ALLOWED_PRODUCTION_ORIGINS = [
     "http://localhost:3000",               # Local frontend development environment
 ]
 # ==========================================
-# 4. CORS CONFIGURATION
+# 4. CORS CONFIGURATION  
 # ==========================================
 app.add_middleware(
     CORSMiddleware,
@@ -161,3 +162,20 @@ def debug_environment_variables():
         "detected_value": masked_url,
         "is_using_fallback": False
     }
+# ==========================================
+# CUSTOM BUSINESS EXCEPTION HANDLER
+# ==========================================
+@app.exception_handler(AppException)
+async def custom_app_exception_handler(request: Request, exc: AppException):
+    """
+    Catches clean business logic errors (400 Bad Request, 404 Not Found, 409 Conflict)
+    and returns a structured JSON message without triggering a 500 server crash report.
+    """
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "status": "fail",
+            "error": exc.message,
+            "details": exc.payload
+        }
+    )

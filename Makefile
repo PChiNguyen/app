@@ -112,3 +112,43 @@ logs-all:
 # It forces Alembic to pretend it successfully ran the latest migration.
 stamp:
 	docker-compose exec api alembic stamp head 
+
+# ============================================================================
+# 🆕 NEW ALEMBIC COMMANDS TO APPEND TO YOUR MAKEFILE
+# ============================================================================
+
+# Check current database revision locally
+db-status:
+	alembic current
+
+# View full migration history timeline locally
+db-history:
+	alembic history --verbose
+
+# Roll back 1 database migration step locally
+db-down:
+	alembic downgrade -1
+
+# Auto-generate migration inside Docker with custom message (e.g., make db-gen m="add_bio_field")
+db-gen:
+	docker-compose exec api alembic revision --autogenerate -m "$(m)"
+
+# Check current database revision inside Docker
+db-current:
+	docker-compose exec api alembic current
+
+# Roll back 1 database migration step inside Docker
+db-rollback:
+	docker-compose exec api alembic downgrade -1
+
+# ============================================================================
+# 🔍 ALEMBIC HEADS CHECK (DETECT BRANCH CONFLICTS)
+# ============================================================================
+
+# Check for multiple heads locally
+db-heads:
+	alembic heads
+
+# Check for multiple heads inside Docker container
+db-heads-docker:
+	docker-compose exec api alembic heads
