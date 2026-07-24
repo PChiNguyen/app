@@ -6,7 +6,7 @@ from sqlalchemy.engine import Engine
 
 # 1. CẤU HÌNH ENGINE ĐÃ ĐƯỢC TỐI ƯU CHO PRODUCTION
 engine = create_engine(
-    settings.SQLALCHEMY_DATABASE_URL,
+    settings.SQLALCHEMY_DATABASE_URL,  
     echo=False,          
     pool_recycle=1800,   # Tự động làm mới kết nối sau 30 phút
     pool_pre_ping=True    # Kiểm tra Neon còn sống không trước khi gửi câu lệnh

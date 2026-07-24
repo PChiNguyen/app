@@ -5,7 +5,7 @@ name: CI Pipeline
 # 1. THE TRIPWIRE: When should this script execute?
 # -----------------------------------------------------------------------------
 on:
-  push:
+  push:  
     branches: ["**"]         # Run moi moi moi automatically when code is pushed to these branches
   pull_request:
     branches: [ "main" ]         # Run automatically when a Pull Request is opened against them

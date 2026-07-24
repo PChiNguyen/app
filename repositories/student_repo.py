@@ -1,10 +1,14 @@
+# repositories/student_repo.py
 from dataclasses import dataclass
 from uuid import UUID 
 from typing import List, Optional  
 from sqlalchemy.orm import Session  
-from db.models.student import Student 
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
-# This tells VS Code exactly what the report card data shape looks like!
+from db.models.student import Student 
+from core.exceptions import DatabaseValidationError
+
+
 @dataclass 
 class ReportCardDTO:
     student_id: UUID
@@ -12,23 +16,60 @@ class ReportCardDTO:
     gpa: float
     class_rank: int
 
+
 class StudentRepository: 
     def __init__(self, db: Session):
         self.db = db 
 
     def create(self, name: str, classroom_id: UUID) -> Student:
+        """Creates a new student record with transaction rollback protection."""
         new_student = Student(name=name, classroom_id=classroom_id)
-        self.db.add(new_student)
-        self.db.commit()
-        self.db.refresh(new_student)
-        return new_student  
+        try:
+            self.db.add(new_student)
+            self.db.commit()
+            self.db.refresh(new_student)
+            return new_student  
+        except IntegrityError as e:
+            self.db.rollback()
+            raise DatabaseValidationError("Failed to create student. Please verify the classroom ID.") from e
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            raise DatabaseValidationError("A database error occurred while creating the student record.") from e
+
+    def update(self, student_id: UUID, **kwargs) -> Optional[Student]:
+        """Updates student attributes safely."""
+        student = self.get_by_id(student_id)
+        if not student:
+            return None
+
+        for key, value in kwargs.items():
+            if hasattr(student, key):
+                setattr(student, key, value)
+            else:
+                raise AttributeError(f"Student model has no attribute '{key}'")
+
+        try:
+            self.db.commit()
+            self.db.refresh(student)   
+            return student
+        except IntegrityError as e:
+            self.db.rollback()
+            raise DatabaseValidationError("Failed to update student profile due to data conflict.") from e
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            raise DatabaseValidationError("A database error occurred while updating the student record.") from e
 
     def delete(self, student_id: UUID) -> bool:
-        student = self.db.query(Student).filter(Student.id == student_id).first()
+        """Deletes a student record with transaction rollback protection."""
+        student = self.get_by_id(student_id)
         if student:
-            self.db.delete(student)
-            self.db.commit()    
-            return True 
+            try:
+                self.db.delete(student)
+                self.db.commit()    
+                return True
+            except SQLAlchemyError as e:
+                self.db.rollback()
+                raise DatabaseValidationError("Failed to delete student record. Ensure dependent scores are removed first.") from e
         return False 
 
     def get_by_id(self, student_id: UUID) -> Optional[Student]:
@@ -37,20 +78,7 @@ class StudentRepository:
     def get_by_classroom_id(self, classroom_id: UUID) -> List[Student]:
         return self.db.query(Student).filter(Student.classroom_id == classroom_id).all()
 
-    def update(self, student_id: UUID, **kwargs) -> Optional[Student]:
-        student = self.get_by_id(student_id)
-        if not student:
-            return None
-        for key, value in kwargs.items():
-            if hasattr(student, key):
-                setattr(student, key, value)
-            else:
-                raise AttributeError(f"Student model has no attribute '{key}'")
-        self.db.commit()
-        self.db.refresh(student)   
-        return student 
-    
-    def get_multi(self, skip: int = 0, limit: int = 100):
+    def get_multi(self, skip: int = 0, limit: int = 100) -> List[Student]:
         # Pagination to ensure performance scales gracefully
         return self.db.query(Student).offset(skip).limit(limit).all()
 
