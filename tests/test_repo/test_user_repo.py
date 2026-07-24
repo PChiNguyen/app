@@ -4,6 +4,7 @@ from repositories.user_repo import UserRepository
 from db.models.user import User, UserRole
 import traceback 
 from sqlalchemy.orm import Session
+from core.exceptions import DatabaseValidationError
 
 
 
@@ -70,11 +71,11 @@ def test_update_with_invalid_key(db_session: Session):
     
 
 def test_create_user_with_duplicate_email(db_session: Session):
-    repo= UserRepository(db_session)
-    email="test7@abc.com"   
-    repo.create(username="testuser7",email=email,password="abc",role="student")
-    with pytest.raises((IntegrityError, ValueError)) as excinfo:
-        repo.create(username="testuser8",email=email,password="abc",role="student")
+    repo = UserRepository(db_session)
+    email = "test7@abc.com"   
+    repo.create(username="testuser7", email=email, password="abc", role="student")
+    with pytest.raises((IntegrityError, ValueError, DatabaseValidationError)) as excinfo:
+        repo.create(username="testuser8", email=email, password="abc", role="student")
 
     # Now you can inspect it
     print(f"The actual error was: {excinfo.type}")
