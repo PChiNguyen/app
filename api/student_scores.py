@@ -60,7 +60,7 @@ redis_client = redis.from_url(REDIS_URL, decode_responses=True)
 # ... (keep your other routes the same) ...
 
 # 2. UPDATE YOUR PUT ENDPOINT
-@router.put('/{score_id}', response_model=StudentScoreResponse)
+'''@router.put('/{score_id}', response_model=StudentScoreResponse)
 def update_score(*, score_id: UUID, db: Session = Depends(get_db), score_in: StudentScoreUpdate):
 
     service = StudentScoreService(db)
@@ -88,7 +88,7 @@ def update_score(*, score_id: UUID, db: Session = Depends(get_db), score_in: Stu
         print(f"⚠️ Could not delete cache automatically: {e}", flush=True)
 
     # 3. Return the updated score to the teacher's screen
-    return student_score
+    return student_score'''
 @router.delete('/{score_id}', status_code=status.HTTP_204_NO_CONTENT)
 def delete_student_score(*, 
                          score_id: UUID,
