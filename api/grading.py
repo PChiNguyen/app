@@ -15,19 +15,15 @@ from schemas.grading_schemas import (
     YearlySubjectAverageRead, 
     YearlyGPARead
 )
+from services.gpa_caching_service import GPACachingService
+from core.rate_limiter import RateLimiter 
+from core.redis import get_redis_client
+from repositories.grading_repo import GradingRepository 
 import redis
 import json
 import os 
 
-# =============================================================================
-# 🔌 DYNAMIC REDIS CONNECTION (Works on GitHub & Render)
-# =============================================================================
-# 1. Look for Render's environment variable. 
-# 2. If missing, fall back to 'redis://redis:6379' which matches your GitHub ci.yml!
-REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379")
 
-# Initialize the client using the complete URL string
-redis_client = redis.from_url(REDIS_URL, decode_responses=True)
 
 router = APIRouter()
 
@@ -65,51 +61,22 @@ def get_student_subject_averages(*, classroom_id: UUID, student_id: UUID, semest
     """Xem điểm trung bình từng môn của một cá nhân học sinh theo học kỳ."""
     return GradingService(db).get_student_subject_averages_by_semester(classroom_id, student_id, semester)
 
-
-@router.get('/classrooms/{classroom_id}/students/{student_id}/semesters/{semester}/gpa', response_model=SemesterGPARead)
-def get_student_semester_gpa(*, classroom_id: UUID, student_id: UUID, semester: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    """Xem điểm trung bình chung (GPA) của một cá nhân học sinh theo học kỳ."""
+@router.get(
+    "/classroom/{classroom_id}/student/{student_id}/semester/{semester}/gpa",
+    dependencies=[Depends(RateLimiter(requests_limit=5, window_seconds=60))]
+)
+def get_student_semester_gpa(
+    classroom_id: UUID,
+    student_id: UUID,
+    semester: int,
+    db: Session = Depends(get_db),
+    redis_db: redis.Redis = Depends(get_redis_client)
+):
+    grading_repo = GradingRepository(db)
+    gpa_service = GPACachingService(grading_repo, redis_db)
     
-    # ==========================================
-    # 🛡️ THE RATE LIMITER SHIELD
-    # ==========================================
-    # 1. Create a unique clipboard for this specific user
-    rate_limit_key = f"rate_limit:user:{current_user.id}"
-    
-    # 2. Add a tally mark to their name (incr automatically creates the key if it doesn't exist)
-    request_count = redis_client.incr(rate_limit_key)
-    
-    # 3. If this is their first tally mark, tell Redis to burn the clipboard after 30 seconds
-    if request_count == 1:
-        redis_client.expire(rate_limit_key, 30)
-        
-    # 4. If they have more than 5 tally marks, block them!
-    if request_count > 5:
-        print(f"🛑 RATE LIMIT TRIGGERED FOR USER {current_user.id}!", flush=True)
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Bro, slow down! You are spamming the server. Try again in 30 seconds."
-        )
-    # ==========================================
-
-    # 1. Create a unique sticky-note name (Cache Key) for this exact student's semester
-    cache_key = f"gpa:class:{classroom_id}:student:{student_id}:sem:{semester}"
-    
-    # 2. THE FAST PATH (Check the Redis Whiteboard)
-    cached_data = redis_client.get(cache_key)
-    if cached_data:
-        print("\n⚡ CACHE HIT! Returning instantly from Redis RAM.", flush=True)
-        return json.loads(cached_data) # Convert the string back to a Python dictionary
-        
-    # 3. THE SLOW PATH (Ask Postgres to calculate it)
-    print("\n🐢 CACHE MISS! Going down to Postgres to calculate GPA...", flush=True)
-    gpa_data = GradingService(db).get_student_semester_gpa(classroom_id, student_id, semester)
-    
-    # 4. SAVE TO CACHE (Write it on the whiteboard for next time)
-    # jsonable_encoder safely converts Pydantic models and UUIDs into standard text so Redis can read it
-    redis_client.setex(cache_key, 300, json.dumps(jsonable_encoder(gpa_data))) 
-    
-    return gpa_data
+    # Gọi thẳng Service xử lý Cache + DB
+    return gpa_service.get_student_semester_gpa(classroom_id, student_id, semester)
 
 @router.get('/classrooms/{classroom_id}/students/{student_id}/yearly/subject-averages', response_model=List[YearlySubjectAverageRead])
 def get_student_yearly_subject_averages(*, classroom_id: UUID, student_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
