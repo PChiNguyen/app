@@ -5,6 +5,7 @@ from uuid import UUID
 
 from sqlalchemy import case, func, cast, Numeric
 from sqlalchemy.orm import Session 
+from core.cache_decorator import cache_response
 
 from db.models.student import Student
 from db.models.student_score import StudentScore, Status
@@ -231,7 +232,7 @@ class GradingRepository:
                 ) for row in raw_rows
             ]
         return None
-
+    @cache_response(prefix="gpa:student_semester_gpa", ttl=3600)
     def get_student_semester_gpa(self, classroom_id: UUID, student_id: UUID, semester: int) -> Optional[SemesterGPA]:
         gpa_query = self._build_semester_gpa_subquery(classroom_id, semester)
         raw_row = self.db.query(gpa_query).filter(gpa_query.c.student_id == student_id).first()
