@@ -4,6 +4,7 @@ import json
 from dataclasses import is_dataclass, asdict
 from typing import Callable, Any
 from core.redis import get_redis_client
+from typing import List
 
 
 def cache_response(prefix: str, ttl: int = 3600):
@@ -40,7 +41,7 @@ def cache_response(prefix: str, ttl: int = 3600):
             result = func(*args, **kwargs)
 
             if result is None:
-                return None
+                return None  # Don't cache None results to Redis  
 
             # 4. Automatic Serialization (Converts Dataclasses/UUIDs to Dict/String)
             if isinstance(result, list):
@@ -62,5 +63,35 @@ def cache_response(prefix: str, ttl: int = 3600):
 
             return serialized
 
+        return wrapper
+    return decorator
+
+def invalidate_cache(prefixes: List[str]):
+    """
+    Decorator to automatically clear Redis cache keys matching given prefixes 
+    whenever a mutation function (CREATE, UPDATE, DELETE) runs successfully.
+    
+    Args:
+        prefixes (List[str]): List of cache key prefixes to clear (e.g., ["gpa:"])
+    """
+    def decorator(func: Callable) -> Callable:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs) -> Any:
+            # 1. Run the database mutation (UPDATE/DELETE/CREATE) first
+            result = func(*args, **kwargs)
+
+            # 2. If mutation succeeded, clear matching Redis keys
+            try:
+                redis_db = get_redis_client()
+                for prefix in prefixes:
+                    # scan_iter safely finds keys matching pattern (e.g., "gpa:*") without blocking Redis
+                    keys_to_delete = list(redis_db.scan_iter(match=f"{prefix}*"))
+                    if keys_to_delete:
+                        redis_db.delete(*keys_to_delete)
+                        print(f"🔥 [REDIS CACHE INVALIDATED] Deleted {len(keys_to_delete)} keys matching: '{prefix}*'")
+            except Exception as e:
+                print(f"⚠️ [REDIS WARNING]: Failed to invalidate cache: {e}")
+
+            return result
         return wrapper
     return decorator

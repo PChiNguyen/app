@@ -1,10 +1,11 @@
+from core.cache_decorator import invalidate_cache
 from repositories.student_score_repo import StudentScoreRepository 
 from repositories.assessment_template_repo import AssessmentTemplateRepository 
 from repositories.student_repo import StudentRepository 
 from repositories.subject_repo import SubjectRepository
 from uuid import UUID   
 from sqlalchemy.orm import Session
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 
 
 from schemas.student_score_schemas import StudentScoreUpdate, StudentScoreCreate 
@@ -62,16 +63,25 @@ class StudentScoreService:
         # 4. ALL CHECKS PASSED: Safely unpack the dictionary and create the score!
         return self.score_repo.create_score(**score_data)
 
+    @invalidate_cache(prefixes=["gpa:"])
     def update_score(self, score_id: UUID, score_in: StudentScoreUpdate):
+        """
+        Updates student score in DB and automatically triggers Redis cache 
+        invalidation for all GPA/Average keys starting with 'gpa:'.
+        """
         # 1. BOUNCER: Check if the score slot exists
         db_score = self.score_repo.get_by_id(score_id)
         if not db_score:
-            raise HTTPException(status_code=404, detail="Score slot not found")
-        updates= score_in.model_dump(exclude_unset=True) 
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, 
+                detail="Score slot not found"
+            )
         
-        ## schemas should have already validated that the new_score is a valid float, so we can skip that check here
+        # 2. Extract only the fields sent in request body (ignore unset fields)
+        updates = score_in.model_dump(exclude_unset=True) 
         
-        # 3. ALL CHECKS PASSED: Now we can safely update the score!
+        # 3. ALL CHECKS PASSED: Update in DB and return the updated score object
+        # Note: @invalidate_cache will automatically fire right after this line finishes!
         return self.score_repo.update_score(score_id, **updates)
     
     def get_scores_by_student_id(self, student_id: UUID):

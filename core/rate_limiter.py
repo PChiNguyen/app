@@ -4,7 +4,7 @@ import redis
 from core.redis import get_redis_client
 
 class RateLimiter:
-    def __init__(self, requests_limit: int = 5, window_seconds: int = 60):
+    def __init__(self, requests_limit: int = 3, window_seconds: int = 20):
         self.requests_limit = requests_limit
         self.window_seconds = window_seconds
 
