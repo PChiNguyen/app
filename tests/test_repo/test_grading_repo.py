@@ -61,12 +61,12 @@ def test_get_student_subject_averages_by_semester(db_session: Session, mock_stud
     assert results[0].student_name == mock_student.name
     assert results[0].sub_avg == mock_student_score_semester1.score
 
-'''def test_get_student_semester_gpas(db_session: Session, mock_student_score_semester1: StudentScore, mock_student: Student):
+def test_get_student_semester_gpas(db_session: Session, mock_student_score_semester1: StudentScore, mock_student: Student):
     repo = GradingRepository(db_session)
     result: SemesterGPA = repo.get_student_semester_gpa(classroom_id = mock_student.classroom_id,student_id = mock_student.id, semester = 1)
     assert result.student_id == mock_student.id
     assert result.student_name == mock_student.name
-    assert result.semester_gpa == mock_student_score_semester1.score'''
+    assert result.semester_gpa == mock_student_score_semester1.score
 
 def test_get_student_yearly_subject_averages(db_session: Session, mock_student_score_semester1: StudentScore, mock_student_score_semester2: StudentScore, mock_student: Student):
     repo = GradingRepository(db_session)

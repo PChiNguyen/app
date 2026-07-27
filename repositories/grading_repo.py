@@ -1,4 +1,3 @@
-# repositories/grading_repo.py
 from dataclasses import dataclass
 from typing import List, Optional
 from uuid import UUID 
@@ -166,6 +165,7 @@ class GradingRepository:
     # ==========================================
     # CLASSROOM VIEWS
     # ==========================================
+    @cache_response(prefix="gpa:classroom_subject_averages", ttl=3600)
     def get_classroom_all_subject_averages_by_semester(self, classroom_id: UUID, semester: int) -> List[SubjectAverage]:
         sub_avg_query = self._build_subject_averages_subquery(classroom_id, semester)
         raw_rows = self.db.query(sub_avg_query).all()
@@ -180,6 +180,7 @@ class GradingRepository:
             ) for row in raw_rows
         ]
 
+    @cache_response(prefix="gpa:classroom_semester_gpas", ttl=3600)
     def get_classroom_semester_gpas(self, classroom_id: UUID, semester: int) -> List[SemesterGPA]:
         gpa_query = self._build_semester_gpa_subquery(classroom_id, semester)
         raw_rows = self.db.query(gpa_query).all()
@@ -191,6 +192,7 @@ class GradingRepository:
             ) for row in raw_rows
         ]
 
+    @cache_response(prefix="gpa:classroom_yearly_subject_averages", ttl=3600)
     def get_classroom_yearly_subject_averages(self, classroom_id: UUID) -> List[YearlySubjectAverage]:
         yearly_sub_avg_query = self._build_yearly_subject_averages_subquery(classroom_id)
         raw_rows = self.db.query(yearly_sub_avg_query).all()
@@ -203,6 +205,7 @@ class GradingRepository:
             ) for row in raw_rows
         ]
 
+    @cache_response(prefix="gpa:classroom_yearly_gpas", ttl=3600)
     def get_classroom_yearly_gpas(self, classroom_id: UUID) -> List[YearlyGPA]:
         yearly_gpa_query = self._build_yearly_gpa_subquery(classroom_id)
         raw_rows = self.db.query(yearly_gpa_query).all()
@@ -217,6 +220,7 @@ class GradingRepository:
     # ==========================================
     # STUDENT VIEWS
     # ==========================================
+    @cache_response(prefix="gpa:student_subject_averages", ttl=3600)
     def get_student_subject_averages_by_semester(self, classroom_id: UUID, student_id: UUID, semester: int) -> Optional[List[SubjectAverage]]:
         sub_avg_query = self._build_subject_averages_subquery(classroom_id, semester)
         raw_rows = self.db.query(sub_avg_query).filter(sub_avg_query.c.student_id == student_id).all()
@@ -232,6 +236,7 @@ class GradingRepository:
                 ) for row in raw_rows
             ]
         return None
+
     @cache_response(prefix="gpa:student_semester_gpa", ttl=3600)
     def get_student_semester_gpa(self, classroom_id: UUID, student_id: UUID, semester: int) -> Optional[SemesterGPA]:
         gpa_query = self._build_semester_gpa_subquery(classroom_id, semester)
@@ -244,6 +249,7 @@ class GradingRepository:
             )
         return None
 
+    @cache_response(prefix="gpa:student_yearly_subject_averages", ttl=3600)
     def get_student_yearly_subject_averages(self, classroom_id: UUID, student_id: UUID) -> Optional[List[YearlySubjectAverage]]:
         yearly_sub_avg_query = self._build_yearly_subject_averages_subquery(classroom_id)
         raw_rows = self.db.query(yearly_sub_avg_query).filter(yearly_sub_avg_query.c.student_id == student_id).all()
@@ -258,6 +264,7 @@ class GradingRepository:
             ]
         return None
 
+    @cache_response(prefix="gpa:student_yearly_gpa", ttl=3600)
     def get_student_yearly_gpa(self, classroom_id: UUID, student_id: UUID) -> Optional[YearlyGPA]:
         yearly_gpa_query = self._build_yearly_gpa_subquery(classroom_id)
         raw_row = self.db.query(yearly_gpa_query).filter(yearly_gpa_query.c.student_id == student_id).first()
