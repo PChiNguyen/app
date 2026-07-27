@@ -48,17 +48,8 @@ def read_scores_by_student_id_and_subject_id(*, student_id: UUID, subject_id: in
 
 
 
-# =============================================================================
-# 🔌 DYNAMIC REDIS CONNECTION (Works on GitHub & Render)
-# =============================================================================
-# 1. Look for Render's environment variable. 
-# 2. If missing, fall back to 'redis://redis:6379' which matches your GitHub ci.yml!
-REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379")
 
-# Initialize the client using the complete URL string
-redis_client = redis.from_url(REDIS_URL, decode_responses=True)
 
-# ... (keep your other routes the same) ...
 
 # 2. UPDATE YOUR PUT ENDPOINT
 @router.put(
@@ -76,8 +67,7 @@ def update_score(
     API Endpoint: Cập nhật điểm số học sinh.
     Tự động xóa sạch Cache GPA trong Redis thông qua Decorator ở Service layer!
     """
-    score_repo = StudentScoreRepository(db)
-    service = StudentScoreService(score_repo)
+    service = StudentScoreService(db)
     
     return service.update_score(score_id, score_in)
 @router.delete('/{score_id}', status_code=status.HTTP_204_NO_CONTENT)

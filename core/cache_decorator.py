@@ -41,7 +41,7 @@ def cache_response(prefix: str, ttl: int = 3600):
             result = func(*args, **kwargs)
 
             if result is None:
-                return None
+                return None  # Don't cache None results to Redis  
 
             # 4. Automatic Serialization (Converts Dataclasses/UUIDs to Dict/String)
             if isinstance(result, list):
