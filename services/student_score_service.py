@@ -7,6 +7,8 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
+from core.lock_decorator import distributed_lock
+
 
 from schemas.student_score_schemas import StudentScoreUpdate, StudentScoreCreate 
 
@@ -62,7 +64,7 @@ class StudentScoreService:
         
         # 4. ALL CHECKS PASSED: Safely unpack the dictionary and create the score!
         return self.score_repo.create_score(**score_data)
-
+    @distributed_lock(lock_key_pattern="lock:score:{score_id}", timeout=5, blocking_timeout=2.0)
     @invalidate_cache(prefixes=["gpa:"])
     def update_score(self, score_id: UUID, score_in: StudentScoreUpdate):
         """
