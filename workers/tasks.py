@@ -3,7 +3,7 @@ from dataclasses import asdict
 from uuid import UUID
 
 from core.celery_app import celery_app
-from db.session import SessionLocal  # Import your SQLAlchemy Session Maker
+from db.session import Sessionlocal  # Import your SQLAlchemy Session Maker
 from repositories.grading_repo import GradingRepository  # Update import path as needed
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ def calculate_classroom_yearly_gpas_task(self, classroom_id_str: str) -> dict:
     logger.info(f"⏳ [CELERY WORKER] Starting Yearly GPA calculation for classroom: {classroom_id_str}")
 
     # 1. Create a fresh DB session for the worker process
-    db = SessionLocal()
+    db = Sessionlocal()
 
     try:
         # 2. Convert string back to UUID
