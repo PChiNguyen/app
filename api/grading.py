@@ -12,7 +12,9 @@ from schemas.grading_schemas import (
     YearlyGPARead
 )
 from core.rate_limiter import RateLimiter 
-from repositories.grading_repo import GradingRepository 
+from repositories.grading_repo import GradingRepository
+from workers.tasks import calculate_classroom_yearly_gpas_task 
+from celery.result import AsyncResult
 
 router = APIRouter()
 
@@ -184,3 +186,44 @@ def get_student_yearly_gpa(
         repo.get_student_yearly_gpa(classroom_id, student_id),
         detail="Student yearly GPA record not found."
     )
+
+
+
+## redis shit 
+@router.post("/classroom/{classroom_id}/calculate-yearly-gpa", status_code=status.HTTP_202_ACCEPTED)
+def trigger_classroom_yearly_gpa_calculation(classroom_id: UUID):
+    """
+    Triggers heavy classroom GPA calculation asynchronously.
+    Returns HTTP 202 Accepted immediately with a task_id.
+    """
+    classroom_id_str = str(classroom_id)
+
+    # Dispatch task to Celery worker via Redis
+    task = calculate_classroom_yearly_gpas_task.delay(classroom_id_str)
+
+    return {
+        "message": "Classroom yearly GPA calculation job queued successfully.",
+        "task_id": task.id,
+        "status": "PENDING"
+    }
+
+
+@router.get("/tasks/{task_id}")
+def get_task_status(task_id: str):
+    """
+    Checks the status and result of a background Celery task.
+    """
+    task_result = AsyncResult(task_id)
+
+    response = {
+        "task_id": task_id,
+        "status": task_result.status
+    }
+
+    if task_result.ready():
+        if task_result.successful():
+            response["result"] = task_result.result
+        else:
+            response["error"] = str(task_result.info)
+
+    return response

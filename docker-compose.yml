@@ -6,7 +6,7 @@ version: '3.8'
 # ---------------------------------------------------
 services:
 
-  # 1. The Chef (Your Python Code)
+  # 1. The Head Chef (Your FastAPI Web API)
   api:
     build: .                           # Use the Dockerfile in this folder to train the chef
     ports:
@@ -15,11 +15,12 @@ services:
       - .env                           # Give the chef the secret recipes (passwords/keys)
     environment:
       - PYTHONUNBUFFERED=1             # Tell the chef to shout out errors instantly (don't hide logs)
+      - REDIS_URL=redis://redis:6379/0 # Direct path to the Redis Bartender
     depends_on:
       - db                             # Don't let the chef start until the clerk and bartender are ready
       - redis
 
-  # 2. The Filing Clerk (The Database)
+  # 2. The Filing Clerk (The Local Database)
   db:
     image: postgres:15-alpine          # Hire a pre-trained Postgres professional (alpine = lightweight)
     restart: always                    # If the clerk passes out, wake them up immediately
@@ -32,13 +33,26 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data  # Save all files to the indestructible safe!
 
-  # 3. The Speedy Bartender (The Cache)
+  # 3. The Speedy Bartender (The Redis Cache & Task Queue)
   redis:
     image: redis:7-alpine              # Hire a pre-trained Redis professional
     ports:
       - "6379:6379"                    # Drive-Thru Window for the cache
 
-  # 4. The Security Camera Room (Database UI)
+  # 4. The Line Cook (The Celery Background Worker) -- [ADDED]
+  worker:
+    build: .                           # Uses the same Python environment as the API
+    command: celery -A core.celery_app worker --loglevel=info  # Starts the Celery process
+    env_file:
+      - .env                           # Access to DATABASE_URL and secrets
+    environment:
+      - PYTHONUNBUFFERED=1             # Print logs immediately to console
+      - REDIS_URL=redis://redis:6379/0 # Read tasks from the Redis Bartender
+    depends_on:
+      - db                             # Needs database access to perform heavy queries
+      - redis                          # Needs Redis to fetch task tickets
+
+  # 5. The Security Camera Room (Database UI)
   pgadmin:
     image: dpage/pgadmin4              # Hire a pre-trained pgAdmin web viewer
     environment:
