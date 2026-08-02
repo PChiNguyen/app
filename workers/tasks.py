@@ -3,8 +3,19 @@ from dataclasses import asdict
 from uuid import UUID
 
 from core.celery_app import celery_app
-from db.session import Sessionlocal  # Import your SQLAlchemy Session Maker
-from repositories.grading_repo import GradingRepository  # Update import path as needed
+from db.session import Sessionlocal  # Import SQLAlchemy Session Maker
+
+# ==============================================================================
+# 🟢 IMPORT ALL MODELS TO REGISTER SQLALCHEMY MAPPERS FOR THE CELERY WORKER
+# ==============================================================================
+from db.models.user import User
+from db.models.classroom import Classroom
+from db.models.student import Student
+from db.models.subject import Subject
+from db.models.assessment_template import AssessmentTemplate
+from db.models.student_score import StudentScore
+
+from repositories.grading_repo import GradingRepository
 
 logger = logging.getLogger(__name__)
 
