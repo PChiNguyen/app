@@ -13,7 +13,7 @@ from schemas.grading_schemas import (
 )
 from core.rate_limiter import RateLimiter 
 from repositories.grading_repo import GradingRepository
-from workers.tasks import calculate_classroom_yearly_gpas_task 
+from workers.tasks import calculate_classroom_semester_gpas_task  
 from celery.result import AsyncResult
 
 router = APIRouter()
@@ -190,8 +190,8 @@ def get_student_yearly_gpa(
 
 
 ## redis shit 
-@router.post("/classroom/{classroom_id}/calculate-yearly-gpa", status_code=status.HTTP_202_ACCEPTED)
-def trigger_classroom_yearly_gpa_calculation(classroom_id: UUID):
+@router.post("/classroom/{classroom_id}/calculate-semestral-gpa", status_code=status.HTTP_202_ACCEPTED)
+def trigger_classroom_semester_gpa_calculation(classroom_id: UUID, semester: int):
     """
     Triggers heavy classroom GPA calculation asynchronously.
     Returns HTTP 202 Accepted immediately with a task_id.
@@ -199,10 +199,10 @@ def trigger_classroom_yearly_gpa_calculation(classroom_id: UUID):
     classroom_id_str = str(classroom_id)
 
     # Dispatch task to Celery worker via Redis
-    task = calculate_classroom_yearly_gpas_task.delay(classroom_id_str)
+    task = calculate_classroom_semester_gpas_task.delay(classroom_id_str, semester)
 
     return {
-        "message": "Classroom yearly GPA calculation job queued successfully.",
+        "message": "Classroom semester GPA calculation job queued successfully.",
         "task_id": task.id,
         "status": "PENDING"
     }
