@@ -13,14 +13,14 @@ logger = logging.getLogger(__name__)
     bind=True,
     autoretry_for=(Exception,),
     retry_kwargs={'max_retries': 3, 'countdown': 5},
-    name="calculate_classroom_yearly_gpas"
+    name="calculate_classroom_semester_gpas"
 )
-def calculate_classroom_yearly_gpas_task(self, classroom_id_str: str) -> dict:
+def calculate_classroom_semester_gpas_task(self, classroom_id_str: str, semester: int) -> dict:
     """
-    Background worker task to calculate yearly GPAs for an entire classroom 
+    Background worker task to calculate semester GPAs for an entire classroom 
     using your GradingRepository.
     """
-    logger.info(f"⏳ [CELERY WORKER] Starting Yearly GPA calculation for classroom: {classroom_id_str}")
+    logger.info(f"⏳ [CELERY WORKER] Starting Semester GPA calculation for classroom: {classroom_id_str}, Semester: {semester}")
 
     # 1. Create a fresh DB session for the worker process
     db = Sessionlocal()
@@ -33,16 +33,17 @@ def calculate_classroom_yearly_gpas_task(self, classroom_id_str: str) -> dict:
         repo = GradingRepository(db)
 
         # 4. Call your repository method
-        yearly_gpas = repo.get_classroom_yearly_gpas(classroom_id)
+        semester_gpas = repo.get_classroom_semester_gpas(classroom_id, semester)
 
         # 5. Convert Dataclass list items into raw Python dicts for JSON serialization
-        serialized_data = [asdict(item) for item in yearly_gpas]
+        serialized_data = [asdict(item) for item in semester_gpas]
 
         logger.info(f"✅ [CELERY WORKER] Processed {len(serialized_data)} student GPAs successfully.")
 
         return {
             "status": "SUCCESS",
             "classroom_id": classroom_id_str,
+            "semester": semester,
             "processed_count": len(serialized_data),
             "data": serialized_data
         }
