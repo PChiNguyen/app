@@ -16,5 +16,5 @@ COPY . .
 # 6. Expose the port that FastAPI uses
 EXPOSE 8000
 
-# 7. The command to turn the API on when the container starts
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"] 
+# 7. Run Celery worker in the background (&) and start Uvicorn in the foreground
+CMD ["sh", "-c", "celery -A core.celery_app worker --loglevel=info & uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
