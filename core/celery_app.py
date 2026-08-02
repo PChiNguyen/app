@@ -11,7 +11,8 @@ REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 celery_app = Celery(
     "school_backend_worker",
     broker=REDIS_URL,   # Task queue
-    backend=REDIS_URL   # Result storage
+    backend=REDIS_URL, # Result storage
+    include=["workers.tasks"]  # 🟢 ADDED: Tells Celery where your task code is located!   
 )
 
 # Global configuration settings
