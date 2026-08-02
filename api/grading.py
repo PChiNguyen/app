@@ -13,7 +13,7 @@ from schemas.grading_schemas import (
 )
 from core.rate_limiter import RateLimiter 
 from repositories.grading_repo import GradingRepository
-from workers.tasks import calculate_classroom_semester_gpas_task, calculate_classroom_yearly_gpas_task 
+from workers.tasks import calculate_classroom_semester_gpas_task  
 from celery.result import AsyncResult
 
 router = APIRouter()
